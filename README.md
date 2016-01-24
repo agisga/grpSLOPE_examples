@@ -2,4 +2,4 @@
 
 grpSLOPE R package usage examples.
 
-The code will change as the package becomes more user friendly.
+The code in this repository will get simpler and shorter as the package becomes more user friendly.
