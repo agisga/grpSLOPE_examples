@@ -11,10 +11,16 @@
 
 library(grpSLOPE)
 
-# Figure 1 ----------------------
+# Adjust the number of cores to the particular system
+library(doParallel)
+registerDoParallel(cores=10)
+
+####################################
+# Figure 1
+####################################
 
 fdr <- 0.1
-n.iter <- 3
+n.iter <- 300
 
 p <- 5000
 X <- diag(rep(1,p))
@@ -49,37 +55,50 @@ FDR.sd <- rep(NA, length(n.relevant))
 pow    <- rep(NA, length(n.relevant))
 pow.sd <- rep(NA, length(n.relevant))
 
+one.iteration <- function(n.signif){
+  # generate coeffient vector, pick relevant groups at random
+  b <- rep(0, p)
+  ind.relevant <- sample(1:n.group, n.signif)
+  for (j in ind.relevant) { b[group.id[[j]]] <-a }
+
+  # generate the response vector
+  y <- X %*% b + rnorm(p, sd=1)
+
+  # get Group SLOPE solution
+  b.grpSLOPE <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
+                                                 wt=wt, lambda=lambda.max,
+                                                 verbose=FALSE)
+
+  # FDR and power
+  nonzero <- rep(NA, n.group)
+  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE$x[group.id[[j]]]^2) > 0) }
+  truepos <- sum(nonzero[ind.relevant])
+  falsepos <- sum(nonzero) - truepos
+  FDR <- falsepos / max(1, sum(nonzero))
+  pow <- truepos / length(ind.relevant)
+
+  return(list(FDR=FDR, pow=pow))
+}
+
 for (k in 1:length(n.relevant)) {
+  parallel.results <- foreach(i=1:n.iter) %dopar% {
+    one.iteration(n.relevant[k])
+  }
+
   FDR.vec <- rep(NA, n.iter)
   pow.vec <- rep(NA, n.iter)
 
-  for (i in 1:n.iter) {
-    # generate coeffient vector, pick relevant groups at random
-    b <- rep(0, p)
-    ind.relevant <- sample(1:n.group, n.relevant[k])
-    for (j in ind.relevant) { b[group.id[[j]]] <-a }
-
-    # generate the response vector
-    y <- X %*% b + rnorm(p, sd=1)
-
-    # get Group SLOPE solution
-    b.grpSLOPE <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                   wt=1/wt, lambda=lambda.max,
-                                                   verbose=FALSE)
-
-    # FDR and power
-    nonzero <- rep(NA, n.group)
-    for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE$x[group.id[[j]]]^2) > 0) }
-    truepos <- sum(nonzero[ind.relevant])
-    falsepos <- sum(nonzero) - truepos
-    FDR.vec[i] <- falsepos / max(1, sum(nonzero))
-    pow.vec[i] <- truepos / length(ind.relevant)
+  for (j in 1:n.iter) {
+    FDR.vec[j] <- parallel.results[[j]]$FDR
+    pow.vec[j] <- parallel.results[[j]]$pow
   }
 
   FDR[k] <- mean(FDR.vec)
   FDR.sd[k] <- sd(FDR.vec)
   pow[k] <- mean(pow.vec)
   pow.sd[k] <- sd(pow.vec)
+  
+  print(paste(k, "sparsity levels completed"))
 }
 
 #####################################################

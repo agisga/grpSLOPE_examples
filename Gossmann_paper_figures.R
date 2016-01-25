@@ -14,6 +14,10 @@
 library(grpSLOPE)
 library(grpreg)
 
+# Adjust the number of cores to the particular system
+library(doParallel)
+registerDoParallel(cores=10)
+
 TestGroupSLOPE <- function(n.significant.blocks, n.subjects, signal, verbose=FALSE){
 
   # (1) Generate the nsubjects x 1050 design matrix X from the multivariate normal distribution 
@@ -88,8 +92,8 @@ TestGroupSLOPE <- function(n.significant.blocks, n.subjects, signal, verbose=FAL
 
   # (5) Compute the solution
   # (5.1) Group SLOPE
-  wt.inv <- rep(rep(c(1/sqrt(5), 1/sqrt(10), 1/sqrt(20)), c(5, 10, 20)), 30)
-  grpslope <- proximalGradientSolverGroupSLOPE(y=y, A=A, group=group, wt=wt.inv,
+  wt <- rep(rep(c(sqrt(5), sqrt(10), sqrt(20)), c(5, 10, 20)), 30)
+  grpslope <- proximalGradientSolverGroupSLOPE(y=y, A=A, group=group, wt=wt,
                                                lambda=lambda.MC, verbose=verbose)
   # (5.2) CV Group LASSO
   cvgrplasso <- cv.grpreg(A, y, group, penalty="grLasso", family="gaussian")
@@ -180,9 +184,6 @@ for(k in 1:length(sparsity.vec)){
   withinblock.cor[[k]] <- vector(mode="list")
   betweenblock.cor[[k]] <- vector(mode="list")
 }
-
-library(doParallel)
-registerDoParallel(cores=2)
 
 parallel.results <- vector(mode="list")
 for(k in 1:length(sparsity.vec)){
