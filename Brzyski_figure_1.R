@@ -14,14 +14,9 @@ library(grpSLOPE)
 library(doParallel)
 registerDoParallel(cores=10)
 
-#####################################################################
+############
 # Figure 1
-#
-# This code can produce results for lambda_max or lambda_mean.
-# The corresponding line for lambda generation and the corresponding
-# proximalGradientSolverGroupSLOPE() call need to be commented out
-# or uncommented, depending on which method is to be used.
-#####################################################################
+############
 
 fdr <- 0.1
 n.iter <- 300
