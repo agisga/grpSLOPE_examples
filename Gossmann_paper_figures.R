@@ -1,9 +1,10 @@
-
 ###############################################################################
 ###############################################################################
 ###############################################################################
 # Data generation, analysis and plots for figures 4 (a), (b) and 6 (a) in 
-# A. Gossmann, S. Cao, Y.-P. Wang (2015), "Identification of Significant Genetic Variants via SLOPE, and Its Extension to Group SLOPE" (http://dx.doi.org/10.1145/2808719.2808743).
+# A. Gossmann, S. Cao, Y.-P. Wang (2015), "Identification of Significant
+# Genetic Variants via SLOPE, and Its Extension to Group SLOPE" 
+# (http://dx.doi.org/10.1145/2808719.2808743).
 #
 # Data generation, analysis and plots for figures 5 (a), (b) and 6 (b) are
 # obtained by the same code with a change of parameters
