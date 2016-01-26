@@ -114,9 +114,10 @@ plot(n.relevant, FDR, ylim=c(0,0.15), type="b",
 lines(n.relevant, fdr*(n.group-n.relevant)/n.group)
 
 # FDR error bars
-segments(n.relevant, FDR-FDR.sd, n.relevant, FDR+FDR.sd, col="grey")
-segments(n.relevant-1, FDR-FDR.sd, n.relevant+1, FDR-FDR.sd, col="grey")
-segments(n.relevant-1, FDR+FDR.sd, n.relevant+1, FDR+FDR.sd, col="grey")
+FDR.se <- FDR.sd/sqrt(p)
+segments(n.relevant, FDR-2*FDR.se, n.relevant, FDR+2*FDR.se, col="grey")
+segments(n.relevant-1, FDR-2*FDR.se, n.relevant+1, FDR-2*FDR.se, col="grey")
+segments(n.relevant-1, FDR+2*FDR.se, n.relevant+1, FDR+2*FDR.se, col="grey")
 
 #############################################################
 # Figure 1 (c) - q=0.1, basic lambda, Brzyski et. al. (2015)
