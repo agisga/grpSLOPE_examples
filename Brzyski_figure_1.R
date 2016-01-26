@@ -14,9 +14,14 @@ library(grpSLOPE)
 library(doParallel)
 registerDoParallel(cores=10)
 
-####################################
+#####################################################################
 # Figure 1
-####################################
+#
+# This code can produce results for lambda_max or lambda_mean.
+# The corresponding line for lambda generation and the corresponding
+# proximalGradientSolverGroupSLOPE() call need to be commented out
+# or uncommented, depending on which method is to be used.
+#####################################################################
 
 fdr <- 0.1
 n.iter <- 300
@@ -45,17 +50,22 @@ a <- sum(Bfun(group.length)) / sum(sqrt(group.length))
 n.relevant <- floor(seq(1, 250, length=11))
 
 # generate lambda
-#lambda.max <- lambdaGroupSLOPE(fdr=fdr, group=group,
-#                               wt=sqrt(group.length),
-#                               method="chiOrthoMax")
+lambda.max <- lambdaGroupSLOPE(fdr=fdr, group=group,
+                               wt=sqrt(group.length),
+                               method="chiOrthoMax")
 lambda.mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
                                 wt=sqrt(group.length),
                                 method="chiOrthoMean")
 
-FDR    <- rep(NA, length(n.relevant))
-FDR.sd <- rep(NA, length(n.relevant))
-pow    <- rep(NA, length(n.relevant))
-pow.sd <- rep(NA, length(n.relevant))
+FDR.max    <- rep(NA, length(n.relevant))
+FDR.max.sd <- rep(NA, length(n.relevant))
+pow.max    <- rep(NA, length(n.relevant))
+pow.max.sd <- rep(NA, length(n.relevant))
+
+FDR.mean    <- rep(NA, length(n.relevant))
+FDR.mean.sd <- rep(NA, length(n.relevant))
+pow.mean    <- rep(NA, length(n.relevant))
+pow.mean.sd <- rep(NA, length(n.relevant))
 
 one.iteration <- function(n.signif){
   # generate coeffient vector, pick relevant groups at random
@@ -67,22 +77,30 @@ one.iteration <- function(n.signif){
   y <- X %*% b + rnorm(p, sd=1)
 
   # get Group SLOPE solution
-#  b.grpSLOPE <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-#                                                 wt=wt, lambda=lambda.max,
-#                                                 verbose=FALSE)
-  b.grpSLOPE <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                 wt=wt, lambda=lambda.mean,
-                                                 verbose=FALSE)
+  b.grpSLOPE.max <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
+                                                     wt=wt, lambda=lambda.max,
+                                                     verbose=FALSE)
+  b.grpSLOPE.mean <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
+                                                      wt=wt, lambda=lambda.mean,
+                                                      verbose=FALSE)
 
   # FDR and power
   nonzero <- rep(NA, n.group)
-  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE$x[group.id[[j]]]^2) > 0) }
+  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.max$x[group.id[[j]]]^2) > 0) }
   truepos <- sum(nonzero[ind.relevant])
   falsepos <- sum(nonzero) - truepos
-  FDR <- falsepos / max(1, sum(nonzero))
-  pow <- truepos / length(ind.relevant)
+  FDR.max <- falsepos / max(1, sum(nonzero))
+  pow.max <- truepos / length(ind.relevant)
 
-  return(list(FDR=FDR, pow=pow))
+  nonzero <- rep(NA, n.group)
+  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.mean$x[group.id[[j]]]^2) > 0) }
+  truepos <- sum(nonzero[ind.relevant])
+  falsepos <- sum(nonzero) - truepos
+  FDR.mean <- falsepos / max(1, sum(nonzero))
+  pow.mean <- truepos / length(ind.relevant)
+
+  return(list(FDR.max=FDR.max, pow.max=pow.max,
+              FDR.mean=FDR.mean, pow.mean=pow.mean))
 }
 
 for (k in 1:length(n.relevant)) {
@@ -90,18 +108,27 @@ for (k in 1:length(n.relevant)) {
     one.iteration(n.relevant[k])
   }
 
-  FDR.vec <- rep(NA, n.iter)
-  pow.vec <- rep(NA, n.iter)
+  FDR.max.vec  <- rep(NA, n.iter)
+  pow.max.vec  <- rep(NA, n.iter)
+  FDR.mean.vec <- rep(NA, n.iter)
+  pow.mean.vec <- rep(NA, n.iter)
 
   for (j in 1:n.iter) {
-    FDR.vec[j] <- parallel.results[[j]]$FDR
-    pow.vec[j] <- parallel.results[[j]]$pow
+    FDR.max.vec[j]  <- parallel.results[[j]]$FDR.max
+    pow.max.vec[j]  <- parallel.results[[j]]$pow.max
+    FDR.mean.vec[j] <- parallel.results[[j]]$FDR.mean
+    pow.mean.vec[j] <- parallel.results[[j]]$pow.mean
   }
 
-  FDR[k] <- mean(FDR.vec)
-  FDR.sd[k] <- sd(FDR.vec)
-  pow[k] <- mean(pow.vec)
-  pow.sd[k] <- sd(pow.vec)
+  FDR.max[k] <- mean(FDR.max.vec)
+  FDR.max.sd[k] <- sd(FDR.max.vec)
+  pow.max[k] <- mean(pow.max.vec)
+  pow.max.sd[k] <- sd(pow.max.vec)
+
+  FDR.mean[k] <- mean(FDR.mean.vec)
+  FDR.mean.sd[k] <- sd(FDR.mean.vec)
+  pow.mean[k] <- mean(pow.mean.vec)
+  pow.mean.sd[k] <- sd(pow.mean.vec)
   
   print(paste(k, "sparsity levels completed"))
 }
@@ -111,24 +138,48 @@ for (k in 1:length(n.relevant)) {
 #####################################################
 
 # plot FDR -------------------------
-plot(n.relevant, FDR, ylim=c(0,0.15), type="b",
+plot(n.relevant, FDR.max, ylim=c(0,0.15), type="b", lty=2,
      xlab="Number of relevant groups", ylab="Estimated gFDR", 
      main="gFDR for lambda_max")
 
 # FDR nominal level
 lines(n.relevant, fdr*(n.group-n.relevant)/n.group)
 
-# FDR error bars
-FDR.se <- FDR.sd/sqrt(p)
-segments(n.relevant, FDR-2*FDR.se, n.relevant, FDR+2*FDR.se, col="blue")
-segments(n.relevant-1, FDR-2*FDR.se, n.relevant+1, FDR-2*FDR.se, col="blue")
-segments(n.relevant-1, FDR+2*FDR.se, n.relevant+1, FDR+2*FDR.se, col="blue")
+legend(130, 0.14, c("gFDR, q=0.1", "Theoretical upper bound"), lty=c(2,1), pch=c(1,NA))
 
-#############################################################
-# Figure 1 (c) - q=0.1, basic lambda, Brzyski et. al. (2015)
-#############################################################
+# FDR error bars
+FDR.max.se <- FDR.max.sd/sqrt(n.iter)
+segments(n.relevant, FDR.max-2*FDR.max.se, n.relevant, FDR.max+2*FDR.max.se, col="blue")
+segments(n.relevant-1, FDR.max-2*FDR.max.se, n.relevant+1, FDR.max-2*FDR.max.se, col="blue")
+segments(n.relevant-1, FDR.max+2*FDR.max.se, n.relevant+1, FDR.max+2*FDR.max.se, col="blue")
+
+#####################################################
+# Figure 1 (a) - q=0.1, Brzyski et. al. (2015)
+#####################################################
+
+# plot FDR -------------------------
+plot(n.relevant, FDR.mean, ylim=c(0,0.15), type="b", lty=2,
+     xlab="Number of relevant groups", ylab="Estimated gFDR", 
+     main="gFDR for lambda_mean")
+
+# FDR nominal level
+lines(n.relevant, fdr*(n.group-n.relevant)/n.group)
+
+legend(130, 0.14, c("gFDR, q=0.1", "Theoretical upper bound"), lty=c(2,1), pch=c(1,NA))
+
+# FDR error bars
+FDR.mean.se <- FDR.mean.sd/sqrt(n.iter)
+segments(n.relevant, FDR.mean-2*FDR.mean.se, n.relevant, FDR.mean+2*FDR.mean.se, col="blue")
+segments(n.relevant-1, FDR.mean-2*FDR.mean.se, n.relevant+1, FDR.mean-2*FDR.mean.se, col="blue")
+segments(n.relevant-1, FDR.mean+2*FDR.mean.se, n.relevant+1, FDR.mean+2*FDR.mean.se, col="blue")
+
+####################################################################
+# Figure 1 (c) - q=0.1, basic/relaxed lambda, Brzyski et. al. (2015)
+####################################################################
 
 # plot power -------------------------
-plot(n.relevant, pow, ylim=c(0,1), type="b",
+plot(n.relevant, pow.max, ylim=c(0,1), type="b", col=1, pch=1,
      xlab="Number of relevant groups", ylab="Estimated power", 
-     main="power for lambda_max")
+     main="Power")
+lines(n.relevant, pow.mean, type="b", col=2, pch=2)
+legend(150, 0.4, c("Basic lambda, q=0.1", "Relaxed lambda, q=0.1"), lty=c(1,1), pch=c(1,2))
