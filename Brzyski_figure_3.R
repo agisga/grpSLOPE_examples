@@ -110,18 +110,19 @@ for (k in 1:length(n.relevant)) {
 # plot FDR -------------------------
 plot(n.relevant, FDR.max, ylim=c(0,0.3), type="b",
      xlab="Number of relevant groups", ylab="Estimated gFDR", 
-     main="gFDR for lambda_max")
+     main="gFDR for lambda_max, q = 0.1")
 
 # FDR nominal level
 abline(fdr, 0)
 
 # FDR error bars
-segments(n.relevant, FDR.max-FDR.max.sd, n.relevant,
-         FDR.max+FDR.max.sd, col="grey")
-segments(n.relevant-1, FDR.max-FDR.max.sd, n.relevant+1,
-         FDR.max-FDR.max.sd, col="grey")
-segments(n.relevant-1, FDR.max+FDR.max.sd, n.relevant+1,
-         FDR.max+FDR.max.sd, col="grey")
+FDR.max.se <- FDR.max.sd / sqrt(n.iter)
+segments(n.relevant, FDR.max-FDR.max.se, n.relevant,
+         FDR.max+FDR.max.se, col="blue")
+segments(n.relevant-1, FDR.max-FDR.max.se, n.relevant+1,
+         FDR.max-FDR.max.se, col="blue")
+segments(n.relevant-1, FDR.max+FDR.max.se, n.relevant+1,
+         FDR.max+FDR.max.se, col="blue")
 
 #############################################################
 # Figure 3 (b) - q=0.1, Brzyski et. al. (2015)
@@ -130,15 +131,26 @@ segments(n.relevant-1, FDR.max+FDR.max.sd, n.relevant+1,
 # plot FDR -------------------------
 plot(n.relevant, FDR.chi, ylim=c(0,0.3), type="b",
      xlab="Number of relevant groups", ylab="Estimated gFDR", 
-     main="gFDR for corrected lambda")
+     main="gFDR for corrected lambda, q = 0.1")
 
 # FDR nominal level
 abline(fdr, 0)
 
 # FDR error bars
-segments(n.relevant, FDR.chi-FDR.chi.sd, n.relevant,
-         FDR.chi+FDR.chi.sd, col="grey")
-segments(n.relevant-1, FDR.chi-FDR.chi.sd, n.relevant+1,
-         FDR.chi-FDR.chi.sd, col="grey")
-segments(n.relevant-1, FDR.chi+FDR.chi.sd, n.relevant+1,
-         FDR.chi+FDR.chi.sd, col="grey")
+FDR.chi.se <- FDR.chi.sd / sqrt(n.iter)
+segments(n.relevant, FDR.chi-FDR.chi.se, n.relevant,
+         FDR.chi+FDR.chi.se, col="blue")
+segments(n.relevant-1, FDR.chi-FDR.chi.se, n.relevant+1,
+         FDR.chi-FDR.chi.se, col="blue")
+segments(n.relevant-1, FDR.chi+FDR.chi.se, n.relevant+1,
+         FDR.chi+FDR.chi.se, col="blue")
+
+#############################################################
+# Figure 3 (c) - q=0.1, Brzyski et. al. (2015)
+#############################################################
+
+plot(lambda.max[1:100], type="l", lty=2, ylim=c(1.6,2.4),
+     xlab="Index", ylab="Value of coefficient",
+     main="Basic and corrected lambdas, q = 0.1")
+lines(lambda.chi[1:100], lty=1)
+legend(50, 2.3, c("Basic lambda", "Corrected lambda"), lty=c(2,1))
