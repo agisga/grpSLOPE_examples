@@ -140,7 +140,7 @@ plot(n.relevant, FDR.max, ylim=c(0,0.15), type="b", lty=2,
 # FDR nominal level
 lines(n.relevant, fdr*(n.group-n.relevant)/n.group)
 
-legend(130, 0.14, c("gFDR, q=0.1", "Theoretical upper bound"), lty=c(2,1), pch=c(1,NA))
+legend(90, 0.14, c("gFDR, q=0.1", "Theoretical upper bound"), lty=c(2,1), pch=c(1,NA))
 
 # FDR error bars
 FDR.max.se <- FDR.max.sd/sqrt(n.iter)
@@ -149,7 +149,7 @@ segments(n.relevant-1, FDR.max-2*FDR.max.se, n.relevant+1, FDR.max-2*FDR.max.se,
 segments(n.relevant-1, FDR.max+2*FDR.max.se, n.relevant+1, FDR.max+2*FDR.max.se, col="blue")
 
 #####################################################
-# Figure 1 (a) - q=0.1, Brzyski et. al. (2015)
+# Figure 1 (b) - q=0.1, Brzyski et. al. (2015)
 #####################################################
 
 # plot FDR -------------------------
@@ -160,7 +160,7 @@ plot(n.relevant, FDR.mean, ylim=c(0,0.15), type="b", lty=2,
 # FDR nominal level
 lines(n.relevant, fdr*(n.group-n.relevant)/n.group)
 
-legend(130, 0.14, c("gFDR, q=0.1", "Theoretical upper bound"), lty=c(2,1), pch=c(1,NA))
+legend(90, 0.14, c("gFDR, q=0.1", "Theoretical upper bound"), lty=c(2,1), pch=c(1,NA))
 
 # FDR error bars
 FDR.mean.se <- FDR.mean.sd/sqrt(n.iter)
@@ -177,4 +177,5 @@ plot(n.relevant, pow.max, ylim=c(0,1), type="b", col=1, pch=1,
      xlab="Number of relevant groups", ylab="Estimated power", 
      main="Power")
 lines(n.relevant, pow.mean, type="b", col=2, pch=2)
-legend(150, 0.4, c("Basic lambda, q=0.1", "Relaxed lambda, q=0.1"), lty=c(1,1), pch=c(1,2))
+legend(90, 0.4, c("Basic lambda, q=0.1", "Relaxed lambda, q=0.1"),
+       lty=c(1,1), pch=c(1,2), col=c(1,2))
