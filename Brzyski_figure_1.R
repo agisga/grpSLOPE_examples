@@ -31,11 +31,6 @@ group <- c(rep(1:200, each=3),
            rep(801:1000, each=7))
 group.id <- getGroupID(group)
 group.length <- sapply(group.id, FUN=length)
-wt <- rep(NA, p)
-for (j in 1:n.group) {
-  wt[group.id[[j]]] <- sqrt(group.length[j])
-}
-#wt <- sqrt(group.length)
 
 Bfun <- function(l) {
   sqrt(4*log(n.group) * (1 - n.group^(-2/l)) - l)
@@ -43,14 +38,6 @@ Bfun <- function(l) {
 a <- sum(Bfun(group.length)) / sum(sqrt(group.length))
 
 n.relevant <- floor(seq(1, 250, length=11))
-
-# generate lambda
-lambda.max <- lambdaGroupSLOPE(fdr=fdr, group=group,
-                               wt=sqrt(group.length),
-                               method="chiOrthoMax")
-lambda.mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
-                                wt=sqrt(group.length),
-                                method="chiOrthoMean")
 
 FDR.max    <- rep(NA, length(n.relevant))
 FDR.max.sd <- rep(NA, length(n.relevant))
@@ -72,23 +59,21 @@ one.iteration <- function(n.signif){
   y <- X %*% b + rnorm(p, sd=1)
 
   # get Group SLOPE solution
-  b.grpSLOPE.max <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                     wt=wt, lambda=lambda.max,
-                                                     verbose=FALSE)
-  b.grpSLOPE.mean <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                      wt=wt, lambda=lambda.mean,
-                                                      verbose=FALSE)
+  b.grpSLOPE.max <- grpSLOPE(X=X, y=y, group=group, fdr=fdr,
+                             lambda="chiOrthoMax", sigma=1, verbose=FALSE)
+  b.grpSLOPE.mean <- grpSLOPE(X=X, y=y, group=group, fdr=fdr,
+                              lambda="chiOrthoMean", sigma=1, verbose=FALSE)
 
   # FDR and power
   nonzero <- rep(NA, n.group)
-  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.max$x[group.id[[j]]]^2) > 0) }
+  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.max$beta[group.id[[j]]]^2) > 0) }
   truepos <- sum(nonzero[ind.relevant])
   falsepos <- sum(nonzero) - truepos
   FDR.max <- falsepos / max(1, sum(nonzero))
   pow.max <- truepos / length(ind.relevant)
 
   nonzero <- rep(NA, n.group)
-  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.mean$x[group.id[[j]]]^2) > 0) }
+  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.mean$beta[group.id[[j]]]^2) > 0) }
   truepos <- sum(nonzero[ind.relevant])
   falsepos <- sum(nonzero) - truepos
   FDR.mean <- falsepos / max(1, sum(nonzero))

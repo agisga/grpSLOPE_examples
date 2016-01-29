@@ -26,17 +26,8 @@ n.group <- 1000
 group <- rep(1:1000, each=5)
 group.id <- getGroupID(group)
 group.length <- sapply(group.id, FUN=length)
-wt <- rep(sqrt(5), p)
 B <- sqrt(4*log(n.group) * (1 - n.group^(-2/5)) - 5)
 n.relevant <- floor(seq(1, 100, length=10))
-
-# generate lambda
-lambda.max <- lambdaGroupSLOPE(fdr=fdr, group=group,
-                               wt=sqrt(group.length),
-                               method="chiOrthoMax")
-lambda.chi <- lambdaGroupSLOPE(fdr=fdr, n.obs=p, group=group, 
-                               wt=sqrt(group.length),
-                               method="chiEqual")
 
 FDR.chi    <- rep(NA, length(n.relevant))
 FDR.chi.sd <- rep(NA, length(n.relevant))
@@ -59,22 +50,20 @@ one.iteration <- function(n.signif){
   y <- X %*% b + rnorm(p, sd=1)
 
   # get Group SLOPE solution
-  b.grpSLOPE.chi <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                     wt=wt, lambda=lambda.chi,
-                                                     verbose=FALSE)
-  b.grpSLOPE.max <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                     wt=wt, lambda=lambda.max,
-                                                     verbose=FALSE)
+  b.grpSLOPE.chi <- grpSLOPE(X=X, y=y, group=group, fdr=fdr,
+                             lambda="chiEqual", sigma=1, verbose=FALSE)
+  b.grpSLOPE.max <- grpSLOPE(X=X, y=y, group=group, fdr=fdr,
+                             lambda="chiOrthoMax", sigma=1, verbose=FALSE)
 
   # FDR and power
   nonzero <- rep(NA, n.group)
-  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.chi$x[group.id[[j]]]^2) > 0) }
+  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.chi$beta[group.id[[j]]]^2) > 0) }
   truepos <- sum(nonzero[ind.relevant])
   falsepos <- sum(nonzero) - truepos
   FDR.chi <- falsepos / max(1, sum(nonzero))
 
   nonzero <- rep(NA, n.group)
-  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.max$x[group.id[[j]]]^2) > 0) }
+  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.max$beta[group.id[[j]]]^2) > 0) }
   truepos <- sum(nonzero[ind.relevant])
   falsepos <- sum(nonzero) - truepos
   FDR.max <- falsepos / max(1, sum(nonzero))
@@ -148,7 +137,12 @@ segments(n.relevant-1, FDR.chi+FDR.chi.se, n.relevant+1,
 #############################################################
 # Figure 3 (c) - q=0.1, Brzyski et. al. (2015)
 #############################################################
-
+lambda.max <- lambdaGroupSLOPE(fdr=fdr, group=group,
+                               wt=sqrt(group.length),
+                               method="chiOrthoMax")
+lambda.chi <- lambdaGroupSLOPE(fdr=fdr, n.obs=p, group=group, 
+                               wt=sqrt(group.length),
+                               method="chiEqual")
 plot(lambda.max[1:100], type="l", lty=2, ylim=c(1.6,2.4),
      xlab="Index", ylab="Value of coefficient",
      main="Basic and corrected lambdas, q = 0.1")

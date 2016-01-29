@@ -79,7 +79,8 @@ TestGroupSLOPE <- function(n.significant.blocks, n.subjects, signal, verbose=FAL
   errorvector <- rnorm(nsubjects,0,1)
   y <- A %*% b + errorvector
 
-  # (4) Generate lambda
+  # (4) Compute the solution
+  # (4.1) Group SLOPE
   fdr <- 0.10
   group <- vector()
   for (i in 1:30) {
@@ -88,35 +89,29 @@ TestGroupSLOPE <- function(n.significant.blocks, n.subjects, signal, verbose=FAL
   }
   m <- length(getGroupID(group))
 
-  # Monte Carlo lambda
-  lambda.MC <- lambdaGroupSLOPE(fdr=fdr, group=group, A=A, n.MC=20, MC.reps=5000, method="gaussianMC")
-
-  # (5) Compute the solution
-  # (5.1) Group SLOPE
-  wt <- rep(rep(c(sqrt(5), sqrt(10), sqrt(20)), c(5, 10, 20)), 30)
-  grpslope <- proximalGradientSolverGroupSLOPE(y=y, A=A, group=group, wt=wt,
-                                               lambda=lambda.MC, verbose=verbose)
-  # (5.2) CV Group LASSO
+  grpslope <- grpSLOPE(X=A, y=y, group=group, fdr=fdr, lambda="gaussianMC",
+                       sigma=1, n.MC=20, MC.reps=5000, verbose=verbose)
+  # (4.2) CV Group LASSO
   cvgrplasso <- cv.grpreg(A, y, group, penalty="grLasso", family="gaussian")
 
-  #(6) Compute the true and the false discovery rates
-  #(6.1) Group SLOPE
+  #(5) Compute the true and the false discovery rates
+  #(5.1) Group SLOPE
   total.discoveries.slope <- 0
   true.discoveries.slope <- 0
   false.discoveries.slope <- 0
   for(i in 1:(m-1)){
-    if(sqrt(sum(grpslope$x[block.start[i]:(block.start[i+1]-1)]^2)) > 1e-2){
+    if(sqrt(sum(grpslope$beta[block.start[i]:(block.start[i+1]-1)]^2)) > 1e-2){
       total.discoveries.slope <- total.discoveries.slope + 1
       if(i %in% block.significant) true.discoveries.slope <- true.discoveries.slope + 1
       else false.discoveries.slope <- false.discoveries.slope + 1
     }
   }
-  if(sqrt(sum(grpslope$x[block.start[m]:1050]^2)) > 1e-2){
+  if(sqrt(sum(grpslope$beta[block.start[m]:1050]^2)) > 1e-2){
     total.discoveries.slope <- total.discoveries.slope + 1
     if(m %in% block.significant) true.discoveries.slope <- true.discoveries.slope + 1
     else false.discoveries.slope <- false.discoveries.slope + 1
   }
-  #(6.2) CV Group LASSO
+  #(5.2) CV Group LASSO
   cvlasso.coef <- coef(cvgrplasso)[-1]
   total.discoveries.cvlasso <- 0
   true.discoveries.cvlasso <- 0
@@ -135,7 +130,7 @@ TestGroupSLOPE <- function(n.significant.blocks, n.subjects, signal, verbose=FAL
   }
 
 
-  # (7) Print the output to screen
+  # (6) Print the output to screen
   if(verbose){
     print(paste("Number significant blocks: ", length(block.significant)))
     print(paste("Number discoveries: ", total.discoveries.slope, "(GrpSLOPE)", 
