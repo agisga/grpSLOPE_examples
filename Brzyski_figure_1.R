@@ -12,7 +12,7 @@ library(grpSLOPE)
 
 # Adjust the number of cores to the particular system
 library(doParallel)
-registerDoParallel(cores=10)
+registerDoParallel(cores=6)
 
 ############
 # Figure 1
@@ -60,24 +60,24 @@ one.iteration <- function(n.signif){
 
   # get Group SLOPE solution
   b.grpSLOPE.max <- grpSLOPE(X=X, y=y, group=group, fdr=fdr,
-                             lambda="chiOrthoMax", sigma=1, verbose=FALSE)
+                             lambda="chiOrthoMax", sigma=1, verbose=FALSE,
+                             orthogonalize=FALSE, normalize=FALSE)
   b.grpSLOPE.mean <- grpSLOPE(X=X, y=y, group=group, fdr=fdr,
-                              lambda="chiOrthoMean", sigma=1, verbose=FALSE)
+                              lambda="chiOrthoMean", sigma=1, verbose=FALSE,
+                              orthogonalize=FALSE, normalize=FALSE)
 
   # FDR and power
-  nonzero <- rep(NA, n.group)
-  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.max$beta[group.id[[j]]]^2) > 0) }
-  truepos <- sum(nonzero[ind.relevant])
-  falsepos <- sum(nonzero) - truepos
-  FDR.max <- falsepos / max(1, sum(nonzero))
-  pow.max <- truepos / length(ind.relevant)
+  true.relevant <- names(group.id)[ind.relevant]
+  truepos <- length(intersect(b.grpSLOPE.max$selected, true.relevant))
+  falsepos <- length(b.grpSLOPE.max$selected) - truepos
+  FDR.max <- falsepos / max(1, length(b.grpSLOPE.max$selected))
+  pow.max <- truepos / length(true.relevant)
 
-  nonzero <- rep(NA, n.group)
-  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.mean$beta[group.id[[j]]]^2) > 0) }
-  truepos <- sum(nonzero[ind.relevant])
-  falsepos <- sum(nonzero) - truepos
-  FDR.mean <- falsepos / max(1, sum(nonzero))
-  pow.mean <- truepos / length(ind.relevant)
+  true.relevant <- names(group.id)[ind.relevant]
+  truepos <- length(intersect(b.grpSLOPE.mean$selected, true.relevant))
+  falsepos <- length(b.grpSLOPE.mean$selected) - truepos
+  FDR.mean <- falsepos / max(1, length(b.grpSLOPE.mean$selected))
+  pow.mean <- truepos / length(true.relevant)
 
   return(list(FDR.max=FDR.max, pow.max=pow.max,
               FDR.mean=FDR.mean, pow.mean=pow.mean))

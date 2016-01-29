@@ -12,7 +12,7 @@ library(grpSLOPE)
 
 # Adjust the number of cores to the particular system
 library(doParallel)
-registerDoParallel(cores=10)
+registerDoParallel(cores=6)
 
 ####################################
 # Figure 3
@@ -51,22 +51,20 @@ one.iteration <- function(n.signif){
 
   # get Group SLOPE solution
   b.grpSLOPE.chi <- grpSLOPE(X=X, y=y, group=group, fdr=fdr,
-                             lambda="chiEqual", sigma=1, verbose=FALSE)
+                             lambda="chiEqual", sigma=1, verbose=FALSE,
+                             orthogonalize=FALSE, normalize=FALSE)
   b.grpSLOPE.max <- grpSLOPE(X=X, y=y, group=group, fdr=fdr,
-                             lambda="chiOrthoMax", sigma=1, verbose=FALSE)
+                             lambda="chiOrthoMax", sigma=1, verbose=FALSE,
+                             orthogonalize=FALSE, normalize=FALSE)
 
   # FDR and power
-  nonzero <- rep(NA, n.group)
-  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.chi$beta[group.id[[j]]]^2) > 0) }
-  truepos <- sum(nonzero[ind.relevant])
-  falsepos <- sum(nonzero) - truepos
-  FDR.chi <- falsepos / max(1, sum(nonzero))
+  true.relevant <- names(group.id)[ind.relevant]
+  falsepos <- length(setdiff(b.grpSLOPE.chi$selected, true.relevant))
+  FDR.chi <- falsepos / max(1, length(b.grpSLOPE.chi$selected))
 
-  nonzero <- rep(NA, n.group)
-  for (j in 1:n.group) { nonzero[j] <- (sum(b.grpSLOPE.max$beta[group.id[[j]]]^2) > 0) }
-  truepos <- sum(nonzero[ind.relevant])
-  falsepos <- sum(nonzero) - truepos
-  FDR.max <- falsepos / max(1, sum(nonzero))
+  true.relevant <- names(group.id)[ind.relevant]
+  falsepos <- length(setdiff(b.grpSLOPE.max$selected, true.relevant))
+  FDR.max <- falsepos / max(1, length(b.grpSLOPE.max$selected))
 
   return(list(FDR.chi=FDR.chi, FDR.max=FDR.max))
 }
