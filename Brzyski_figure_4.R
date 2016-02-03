@@ -33,9 +33,6 @@ group.id <- getGroupID(group)
 
 n <- 5000
 p <- length(group)
-X <- matrix(rnorm(n*p, sd=1/sqrt(n)), n, p)
-X <- scale(X, center=TRUE, scale=FALSE)
-X <- apply(X, 2, function(x) x/sqrt(sum(x^2)) )
 
 Bfun <- function(l) {
   B <- 4*log(n.group) / (1 - n.group^(-2/l)) - l
@@ -51,12 +48,18 @@ pow    <- rep(NA, length(n.relevant))
 pow.sd <- rep(NA, length(n.relevant))
 
 one.iteration <- function(n.signif){
+  # generate and normalize the model matrix
+  X <- matrix(rnorm(n*p), n, p)
+  X <- scale(X, center=TRUE, scale=FALSE)
+  X <- apply(X, 2, function(x) x/sqrt(sum(x^2)) )
+
   # generate coeffient vector, pick relevant groups at random
   b <- rep(0, p)
   ind.relevant <- sample(1:n.group, n.signif)
   for (j in ind.relevant) {
-    X1 <- apply(as.matrix(X[ , group.id[[j]]]), 1, sum)
-    b[group.id[[j]]] <- (signal.strength / norm(as.matrix(X1), "f")) * rep(1, group.length[j])
+    signals <- runif(group.length[j])
+    X1 <- as.matrix(X[ , group.id[[j]]]) %*% signals
+    b[group.id[[j]]] <- (signal.strength / norm(as.matrix(X1), "f")) * signals
   }
 
   # generate the response vector
