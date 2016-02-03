@@ -12,7 +12,7 @@ library(grpSLOPE)
 
 # Adjust the number of cores to the particular system
 library(doParallel)
-registerDoParallel(cores=3)
+registerDoParallel(cores=(Sys.getenv("SLURM_NTASKS_PER_NODE")))
 
 set.seed(1)
 
@@ -104,8 +104,16 @@ for (k in 1:length(n.relevant)) {
 }
 
 #####################################################
+# Save
+#####################################################
+
+save(list=ls(all.names=TRUE), file="Brzyski_figure_4.RData")
+
+#####################################################
 # Figure 4 (a) - q=0.1, Brzyski et. al. (2015)
 #####################################################
+
+postscript(file="Brzyski_figure_4a.eps", horizontal=FALSE, width=400, height=400)
 
 # plot FDR -------------------------
 plot(n.relevant, FDR, ylim=c(0,0.25), type="b", lty=2,
@@ -123,9 +131,13 @@ segments(n.relevant, FDR-2*FDR.se, n.relevant, FDR+2*FDR.se, col="blue")
 segments(n.relevant-1, FDR-2*FDR.se, n.relevant+1, FDR-2*FDR.se, col="blue")
 segments(n.relevant-1, FDR+2*FDR.se, n.relevant+1, FDR+2*FDR.se, col="blue")
 
+dev.off()
+
 ####################################################################
 # Figure 4 (b) - q=0.1, Brzyski et. al. (2015)
 ####################################################################
+
+postscript(file="Brzyski_figure_4b.eps", horizontal=FALSE, width=400, height=400)
 
 # plot power -------------------------
 plot(n.relevant, pow, ylim=c(0,1), type="b", col=1, pch=1,
@@ -138,9 +150,15 @@ segments(n.relevant, pow-2*pow.se, n.relevant, pow+2*pow.se, col="blue")
 segments(n.relevant-1, pow-2*pow.se, n.relevant+1, pow-2*pow.se, col="blue")
 segments(n.relevant-1, pow+2*pow.se, n.relevant+1, pow+2*pow.se, col="blue")
 
+dev.off()
+
 ####################################################################
 # Figure 4 (c) - q=0.1, Brzyski et. al. (2015)
 ####################################################################
 
+postscript(file="Brzyski_figure_4c.eps", horizontal=FALSE, width=400, height=400)
+
 hist(group.length, xlab = "Group size",
      main = "Histogram of group sizes")
+
+dev.off()
