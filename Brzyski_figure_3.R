@@ -26,7 +26,7 @@ n.group <- 1000
 group <- rep(1:1000, each=5)
 group.id <- getGroupID(group)
 group.length <- sapply(group.id, FUN=length)
-B <- sqrt(4*log(n.group) * (1 - n.group^(-2/5)) - 5)
+B <- sqrt(4*log(n.group) / (1 - n.group^(-2/5)) - 5)
 n.relevant <- floor(seq(1, 100, length=10))
 
 FDR.chi    <- rep(NA, length(n.relevant))

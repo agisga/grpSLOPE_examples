@@ -25,8 +25,6 @@ n.iter <- 200
 
 n.group <- 1000
 group.length <- rbinom(n.group, 1000, 0.008)
-# threshold at 15 because Bfun(16) < 0
-group.length <- sapply(group.length, function(x) min(x, 15))
 group <- c()
 for (i in 1:n.group) {
   group <- c(group, rep(i, group.length[i]))
@@ -40,8 +38,7 @@ X <- scale(X, center=TRUE, scale=FALSE)
 X <- apply(X, 2, function(x) x/sqrt(sum(x^2)) )
 
 Bfun <- function(l) {
-  B <- 4*log(n.group) * (1 - n.group^(-2/l)) - l
-  #B[which(B < 0)] <- 0
+  B <- 4*log(n.group) / (1 - n.group^(-2/l)) - l
   return(sqrt(B))
 }
 signal.strength <- sum(Bfun(group.length)) / n.group

@@ -33,7 +33,7 @@ group.id <- getGroupID(group)
 group.length <- sapply(group.id, FUN=length)
 
 Bfun <- function(l) {
-  sqrt(4*log(n.group) * (1 - n.group^(-2/l)) - l)
+  sqrt(4*log(n.group) / (1 - n.group^(-2/l)) - l)
 }
 a <- sum(Bfun(group.length)) / sum(sqrt(group.length))
 
