@@ -7,5 +7,5 @@
 
 module load R
 
-Rscript test_lambdaMC_methods.srun
+Rscript test_lambdaMC_methods.R
 
