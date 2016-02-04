@@ -41,8 +41,9 @@ TestGroupSLOPE <- function(n.significant.blocks, n.subjects, signal, verbose=FAL
   #Sigma[which(Sigma==0)] <- 0.3
   #---
   Sigma.chol <- as.matrix(chol(Sigma))
-  A <- matrix(rnorm(mean=0, sd=1/1050, 1050*nsubjects),nsubjects, 1050) %*% Sigma.chol
-  # A needs colnorms 1
+  A <- matrix(rnorm(1050*nsubjects),nsubjects, 1050) %*% Sigma.chol
+  # Normalize A
+  A <- scale(A, center=TRUE, scale=FALSE)
   A <- apply(A, 2, function(x) x/sqrt(sum(x^2)) )
 
   # (1.2) Compute the average within and between blocks correlations
@@ -90,7 +91,8 @@ TestGroupSLOPE <- function(n.significant.blocks, n.subjects, signal, verbose=FAL
   m <- length(getGroupID(group))
 
   grpslope <- grpSLOPE(X=A, y=y, group=group, fdr=fdr, lambda="gaussianMC",
-                       sigma=1, n.MC=20, MC.reps=5000, verbose=verbose)
+                       sigma=1, n.MC=20, MC.reps=5000, verbose=verbose,
+                       orthogonalize=FALSE, normalize=FALSE)
   # (4.2) CV Group LASSO
   cvgrplasso <- cv.grpreg(A, y, group, penalty="grLasso", family="gaussian")
 
