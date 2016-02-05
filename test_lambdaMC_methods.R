@@ -1,5 +1,6 @@
+library(methods)
 library(grpSLOPE)
-library(grpreg)
+library(Matrix)
 
 # Adjust the number of cores to the particular system
 library(doParallel)
