@@ -94,7 +94,7 @@ png("./img/test_MC_methods_orthogonal_design.png", height=800, width=800)
 par(mfrow=c(2,2))
 
 for (i in 1:4) {
-  plot(lambda.max[[i]][1:20], type="l", lty=1, ylab="Lambda", main=paste("Gaussian design", i*p, "by", p))
+  plot(lambda.max[[i]][1:20], type="l", lty=1, ylab="Lambda", main=paste("Orthogonal design", i*p, "by", p))
   lines(lambda.mean[[i]][1:20], col=2, lty=1)
   lines(lambda.MC[[i]][1:20], col=3, lty=1)
 }
