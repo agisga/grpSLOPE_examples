@@ -6,7 +6,30 @@ library(Matrix)
 library(doParallel)
 registerDoParallel(cores=(Sys.getenv("SLURM_NTASKS_PER_NODE")))
 
-TestGroupSLOPE <- function(n.significant.blocks, n.subjects, signal, fdr, verbose=FALSE){
+# Orthogonalize each group of columns of a matrix A.
+# For i = 1, ..., m let A_i = A[ , group_i] and compute
+# A_i[ , P] = Q %*% R, where P is a permutation vector.
+#
+orthogonalizeGroups <- function(X, group.id) {
+  n.group <- length(group.id)
+
+  getGroupQR <- function(ids) {
+    submat <- X[ , ids]
+
+    if (length(ids) == 1) {
+      return(list(Q=as.matrix(submat), R=1, P=1))
+    } else {
+      submat.qr <- qr(submat, LAPACK=TRUE)
+      return(list(Q=qr.Q(submat.qr),
+                  R=qr.R(submat.qr),
+                  P=submat.qr$pivot))
+    }
+  }
+
+  return(lapply(group.id, getGroupQR))
+}
+
+TestGroupSLOPE <- function(n.significant.blocks, n.subjects, fdr, verbose=FALSE){
 
   # (1) Generate the nsubjects x 1050 design matrix X from the multivariate normal distribution 
   # with mean 0 and 1050x1050 covariance matrix Sigma,
@@ -25,10 +48,10 @@ TestGroupSLOPE <- function(n.significant.blocks, n.subjects, signal, fdr, verbos
   withinblock.ind[upper.tri(withinblock.ind,diag=T)] <- 0 
   #increase between group cor
   Sigma <- as.matrix(Sigma)
-  Sigma[which(Sigma==0)] <- 0.2
+  Sigma[which(Sigma==0)] <- 0.1
   #---
   Sigma.chol <- as.matrix(chol(Sigma))
-  A <- matrix(rnorm(1050*nsubjects),nsubjects, 1050) %*% Sigma.chol
+  A <- matrix(rnorm(1050*nsubjects), nsubjects, 1050) %*% Sigma.chol
 
   # Normalize A
   A <- scale(A, center=TRUE, scale=FALSE)
@@ -55,26 +78,45 @@ TestGroupSLOPE <- function(n.significant.blocks, n.subjects, signal, fdr, verbos
   # choose significant blocks
   nsignificant <- n.significant.blocks #number of significant blocks
   block.significant <- sort(sample(90,nsignificant))
-  for(i in block.significant){
-    if (i == 90){
-      b[block.start[90]:1050] <- signal
-    }
-    else{
-      b[block.start[i]:(block.start[i+1]-1)] <- (-1)^i * signal 
-    }
-  }
 
-  #(3) Create the response vector y
-  errorvector <- rnorm(nsubjects, 0, 1)
-  y <- A %*% b + errorvector
+  # set signal strength according to Brzyski et. al. (2015)
 
-  # (4) Compute the solution
   group <- vector()
   for (i in 1:30) {
     tmp <- rep((i-1)*3+c(1,2,3), c(5,10,20))
     group <- c(group, tmp)
   }
-  m <- length(getGroupID(group))
+  group.id <- getGroupID(group)
+  group.length <- sapply(group.id, FUN=length)
+  m <- length(group.id)
+
+  Bfun <- function(l) {
+    B <- 4*log(m) / (1 - m^(-2/l)) - l
+    return(sqrt(B))
+  }
+  signal.strength <- sum(Bfun(group.length)) / m
+
+  for(i in block.significant){
+    if (i == 90){
+      b[block.start[90]:1050] <- signal.strength / sqrt(1050 - block.start[90] + 1)
+    }
+    else{
+      b[block.start[i]:(block.start[i+1]-1)] <- signal.strength / sqrt(block.start[i+1] - block.start[i])
+    }
+  }
+
+  #(3) Create the response vector y
+
+  ortho <- orthogonalizeGroups(A, group.id)
+  A.ortho <- matrix(NA, nsubjects, 1050)
+  for (i in 1:m) {
+    A.ortho[ , group.id[[i]]] <- ortho[[i]]$Q
+  }
+
+  errorvector <- rnorm(nsubjects, 0, 1)
+  y <- A.ortho %*% b + errorvector
+
+  # (4) Compute the solution
 
   # (4.1) gaussianMC Group SLOPE
   grpslope.g <- grpSLOPE(X=A, y=y, group=group, fdr=fdr, lambda="gaussianMC",
@@ -135,9 +177,9 @@ TestGroupSLOPE <- function(n.significant.blocks, n.subjects, signal, fdr, verbos
 
 fdr <- 0.1
 numblocks <- 90
-n.replications <- 100
+n.replications <- 50
 n.subjects <- 1000
-sparsity.vec <- seq(0.05,0.8,l=10)
+sparsity.vec <- seq(0.05,0.5,l=5)
 total.discoveries.g <- total.discoveries.c <- total.discoveries.m <- vector(mode="list")
 true.discoveries.g <- true.discoveries.c <- true.discoveries.m <- vector(mode="list")
 false.discoveries.g <- false.discoveries.c <- false.discoveries.m <- vector(mode="list")
@@ -164,7 +206,7 @@ parallel.results <- vector(mode="list")
 for(k in 1:length(sparsity.vec)){
   parallel.results[[k]] <- foreach(i=1:n.replications) %dopar% {
     TestGroupSLOPE(n.significant.blocks=as.integer(sparsity.vec[k]*numblocks), 
-                   n.subjects=n.subjects, signal=1, fdr=fdr, verbose=FALSE)
+                   n.subjects=n.subjects, fdr=fdr, verbose=FALSE)
   }
   print(paste("sparsity level", k, "done"))
 }
@@ -230,7 +272,7 @@ for(j in 1:length(sparsity.vec)){
 
 #*** Save everything ***
 
-save(list = ls(all.names = TRUE), file = "test_lambdaMC_methods.RData")
+save(list = ls(all.names = TRUE), file = "test_lambdaMC_methods_weak_signal.RData")
 
 #*** Do Plots ***
 
@@ -238,7 +280,7 @@ num.signif.blocks <- as.integer(sparsity.vec*numblocks)
 
 # gaussianMC Group SLOPE
 
-postscript(file="gaussianMC.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="gaussianMC_weak_signal.eps", horizontal=FALSE, width=400, height=400)
 
 plot(num.signif.blocks, g.power, type="b", xlab="Number of significant groups", 
      ylab="FDR and Power", main="Group SLOPE", ylim=c(0,1), pch=2, lty=2, col="blue")
@@ -260,7 +302,7 @@ dev.off()
 
 # chiMC Group SLOPE
 
-postscript(file="chiMC.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="chiMC_weak_signal.eps", horizontal=FALSE, width=400, height=400)
 
 plot(num.signif.blocks, c.power, type="b", xlab="Number of significant groups", 
      ylab="FDR and Power", main="Group SLOPE", ylim=c(0,1), pch=2, lty=2, col="blue")
@@ -282,7 +324,7 @@ dev.off()
 
 # chiMean Group SLOPE
 
-postscript(file="chiMean.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="chiMean_weak_signal.eps", horizontal=FALSE, width=400, height=400)
 
 plot(num.signif.blocks, m.power, type="b", xlab="Number of significant groups", 
      ylab="FDR and Power", main="Group SLOPE", ylim=c(0,1), pch=2, lty=2, col="blue")
@@ -304,7 +346,7 @@ dev.off()
 
 # Selected Groups
 
-postscript(file="selected_by_lambdaMC.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="selected_by_lambdaMC_weak_signal.eps", horizontal=FALSE, width=400, height=400)
 
 avg.total.discoveries.g <- apply(as.matrix(as.data.frame(total.discoveries.g)), 2, mean)
 avg.total.discoveries.c <- apply(as.matrix(as.data.frame(total.discoveries.c)), 2, mean)
