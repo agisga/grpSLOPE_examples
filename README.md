@@ -1,7 +1,6 @@
 # grpSLOPE_examples
 
-grpSLOPE R package usage examples.
+Usage examples of varying quality and readability for the R package grpSLOPE.
 
-The package grpSLOPE currently resides in a private repository, but will be released into the public soon.
+A better example of basic usage can be found [here](http://www.alexejgossmann.com/grpSLOPE/basic-usage/).
 
-The code in this repository will change as the package becomes more user friendly.
