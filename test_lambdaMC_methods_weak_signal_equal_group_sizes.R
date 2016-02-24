@@ -36,8 +36,8 @@ TestGroupSLOPE <- function(n.significant, n.subjects, n.predictors, fdr, verbose
   # Generate the n.subjects x n.predictors design matrix A
   # from the multivariate normal distribution 
   # with mean 0 and covariance matrix Sigma.
-  Sigma <- matrix(0.3, n.group, n.group)
-  diag(Sigma) <- rep(0.7, n.group)
+  Sigma <- matrix(0.1, n.group, n.group)
+  diag(Sigma) <- rep(0.5, n.group)
   Sigma <- Sigma %x% matrix(1, m, m) 
   diag(Sigma) <- 1
 
@@ -140,7 +140,7 @@ m <- 5
 fdr <- 0.1
 n.predictors <- 2000
 n.group <- n.predictors / m
-n.replications <- 100 
+n.replications <- 50 
 n.subjects <- 2000
 sparsity.vec <- seq(0.05,0.7,l=7)
 total.discoveries.g <- total.discoveries.c <- total.discoveries.m <- vector(mode="list")
@@ -236,7 +236,7 @@ save(list = ls(all.names = TRUE), file = "test_lambdaMC_methods_weak_signal_equa
 
 num.signif.blocks <- as.integer(sparsity.vec*n.group)
 
-png(file="gaussianMC_weak_signal_equal_group_sizes.png", width=1000, height=400)
+postscript(file="weak_signal_equal_group_sizes.eps", width=1000, height=400)
 par(mfrow=c(1,3))
 
 # chiMean Group SLOPE
@@ -245,7 +245,7 @@ plot(num.signif.blocks, m.power, type="b", xlab="Number of significant groups",
      ylab="FDR and Power", main="lambda = chiMean", ylim=c(0,1), pch=2, lty=2, col="blue")
 lines(num.signif.blocks, m.fdr, type="b", pch=1, lty=1, col="red")
 legend(20, 0.4, c("Power", "False discovery rate"), pch=2:1, lty=2:1, col=c("blue", "red"))
-lines(c(0,100),c(0.1,0.1),lty=3, col="grey")
+lines(c(0,1500),c(0.1,0.1),lty=3, col="black")
 
 # plot fdr error bars
 m.fdr.se <- m.fdr.sd/sqrt(n.replications)
@@ -265,7 +265,7 @@ plot(num.signif.blocks, c.power, type="b", xlab="Number of significant groups",
      ylab="FDR and Power", main="lambda = chiMC", ylim=c(0,1), pch=2, lty=2, col="blue")
 lines(num.signif.blocks, c.fdr, type="b", pch=1, lty=1, col="red")
 legend(20, 0.4, c("Power", "False discovery rate"), pch=2:1, lty=2:1, col=c("blue", "red"))
-lines(c(0,100),c(0.1,0.1),lty=3, col="grey")
+lines(c(0,1500),c(0.1,0.1),lty=3, col="black")
 
 # plot fdr error bars
 c.fdr.se <- c.fdr.sd/sqrt(n.replications)
@@ -284,8 +284,8 @@ segments(num.signif.blocks-1, c.power+2*c.power.se, num.signif.blocks+1, c.power
 plot(num.signif.blocks, g.power, type="b", xlab="Number of significant groups", 
      ylab="FDR and Power", main="lambda = gaussianMC", ylim=c(0,1), pch=2, lty=2, col="blue")
 lines(num.signif.blocks, g.fdr, type="b", pch=1, lty=1, col="red")
-legend(20, 0.2, c("Power", "False discovery rate"), pch=2:1, lty=2:1, col=c("blue", "red"))
-lines(c(0,100),c(0.1,0.1),lty=3, col="grey")
+legend(20, 0.9, c("Power", "False discovery rate"), pch=2:1, lty=2:1, col=c("blue", "red"))
+lines(c(0,1500),c(0.1,0.1),lty=3, col="black")
 
 # plot fdr error bars
 g.fdr.se <- g.fdr.sd/sqrt(n.replications)
