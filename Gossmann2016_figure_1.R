@@ -113,22 +113,23 @@ save(list=ls(all.names=TRUE), file="Gossmann2016_figure_1.RData")
 # Figure 1 (a) - q=0.1
 #####################################################
 
-postscript(file="Gossmann2016_figure_1a.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="Gossmann2016_figure_1a.eps", horizontal=FALSE, width=6, height=6)
 
 # plot FDR -------------------------
-plot(n.relevant, FDR[[1]], ylim=c(0,0.25), type="b", lty=2,
+plot(n.relevant, FDR[[1]], ylim=c(0,0.15), type="b", lty=2,
      xlab="Number of relevant groups", ylab="Estimated gFDR")
 lines(n.relevant, FDR[[2]], type="b", lty=3, pch=2)
-legend(9, 0.24, c("gFDR, q=0.1", "gFDR, q=0.05"), lty=c(2,3), pch=c(1,2))
+legend(9, 0.14, c(paste0("Estimated gFDR, q=", fdr[1]), paste0("Estimated gFDR, q=", fdr[2]), "Target gFDR"),
+       lty=c(2,3,1), pch=c(1,2,NA))
 
 for (target in 1:2) {
   # FDR nominal level
-  lines(n.relevant, fdr[target]*n.relevant/n.group)
+  lines(n.relevant, fdr[target]*(n.group-n.relevant)/n.group)
   # FDR error bars
   FDR.se <- FDR.sd[[target]] / sqrt(n.iter)
-  segments(n.relevant, FDR[[target]]-2*FDR.se, n.relevant, FDR[[target]]+2*FDR.se, col="blue")
-  segments(n.relevant-1, FDR[[target]]-2*FDR.se, n.relevant+1, FDR[[target]]-2*FDR.se, col="blue")
-  segments(n.relevant-1, FDR[[target]]+2*FDR.se, n.relevant+1, FDR[[target]]+2*FDR.se, col="blue")
+  segments(n.relevant, FDR[[target]]-2*FDR.se, n.relevant, FDR[[target]]+2*FDR.se)
+  segments(n.relevant-1, FDR[[target]]-2*FDR.se, n.relevant+1, FDR[[target]]-2*FDR.se)
+  segments(n.relevant-1, FDR[[target]]+2*FDR.se, n.relevant+1, FDR[[target]]+2*FDR.se)
 }
 
 dev.off()
@@ -137,20 +138,20 @@ dev.off()
 # Figure 1 (b) - q=0.1
 ####################################################################
 
-postscript(file="Gossmann2016_figure_1b.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="Gossmann2016_figure_1b.eps", horizontal=FALSE, width=6, height=6)
 
 # plot power -------------------------
 plot(n.relevant, pow[[1]], ylim=c(0,1), type="b", lty=1, pch=1,
      xlab="Number of relevant groups", ylab="Estimated power")
 lines(n.relevant, pow[[2]], type="b", pch=2, lty=2)
-legend(30, 0.4, c("Power, q=0.1", "Power, q=0.05"), lty=c(1,2), pch=c(1,2))
+legend(20, 0.4, c(paste0("Estimated power, q=", fdr[1]), paste0("Estimated power, q=", fdr[2])), lty=c(1,2), pch=c(1,2))
 
 # Power error bars
 for (target in 1:2) {
   pow.se <- pow.sd[[target]] / sqrt(n.iter)
-  segments(n.relevant, pow[[target]]-2*pow.se, n.relevant, pow[[target]]+2*pow.se, col="blue")
-  segments(n.relevant-1, pow[[target]]-2*pow.se, n.relevant+1, pow[[target]]-2*pow.se, col="blue")
-  segments(n.relevant-1, pow[[target]]+2*pow.se, n.relevant+1, pow[[target]]+2*pow.se, col="blue")
+  segments(n.relevant, pow[[target]]-2*pow.se, n.relevant, pow[[target]]+2*pow.se)
+  segments(n.relevant-1, pow[[target]]-2*pow.se, n.relevant+1, pow[[target]]-2*pow.se)
+  segments(n.relevant-1, pow[[target]]+2*pow.se, n.relevant+1, pow[[target]]+2*pow.se)
 }
 
 dev.off()
