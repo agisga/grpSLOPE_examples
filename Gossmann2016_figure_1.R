@@ -4,10 +4,11 @@ library(grpSLOPE)
 library(doParallel)
 registerDoParallel(cores=as.integer(Sys.getenv("SLURM_NTASKS_PER_NODE")))
 
+# number of groups
+n.group <- 100
 
+# data simulation and application of Group SLOPE
 one.iteration <- function(n.signif, target.fdr) {
-  n.group <- 100
-
   # group lengths are random
   group.length <- rbinom(n.group, 1000, 0.008) + 1
   group <- c()
@@ -70,9 +71,9 @@ one.iteration <- function(n.signif, target.fdr) {
 
 set.seed(1)
 
-n.relevant <- c(0, floor(seq(1, 60, length=7)))
+n.relevant <- floor(seq(1, 60, length=7))
 fdr <- c(0.1, 0.05)
-n.iter <- 500
+n.iter <- 1000
 
 FDR    <- list("0.1"=rep(NA, length(n.relevant)), "0.05"=rep(NA, length(n.relevant)))
 FDR.sd <- list("0.1"=rep(NA, length(n.relevant)), "0.05"=rep(NA, length(n.relevant)))
@@ -120,12 +121,10 @@ plot(n.relevant, FDR[[1]], ylim=c(0,0.25), type="b", lty=2,
 lines(n.relevant, FDR[[2]], type="b", lty=3, pch=2)
 legend(9, 0.24, c("gFDR, q=0.1", "gFDR, q=0.05"), lty=c(2,3), pch=c(1,2))
 
-# FDR nominal level
-abline(fdr[1], 0)
-abline(fdr[2], 0)
-
-# FDR error bars
 for (target in 1:2) {
+  # FDR nominal level
+  lines(n.relevant, fdr[target]*n.relevant/n.group)
+  # FDR error bars
   FDR.se <- FDR.sd[[target]] / sqrt(n.iter)
   segments(n.relevant, FDR[[target]]-2*FDR.se, n.relevant, FDR[[target]]+2*FDR.se, col="blue")
   segments(n.relevant-1, FDR[[target]]-2*FDR.se, n.relevant+1, FDR[[target]]-2*FDR.se, col="blue")
@@ -138,7 +137,7 @@ dev.off()
 # Figure 1 (b) - q=0.1
 ####################################################################
 
-postscript(file="Gossmann_figure_1b.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="Gossmann2016_figure_1b.eps", horizontal=FALSE, width=400, height=400)
 
 # plot power -------------------------
 plot(n.relevant, pow[[1]], ylim=c(0,1), type="b", lty=1, pch=1,

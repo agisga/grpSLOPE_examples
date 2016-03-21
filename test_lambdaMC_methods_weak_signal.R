@@ -48,7 +48,7 @@ TestGroupSLOPE <- function(n.significant.blocks, n.subjects, fdr, verbose=FALSE)
   withinblock.ind[upper.tri(withinblock.ind,diag=T)] <- 0 
   #increase between group cor
   Sigma <- as.matrix(Sigma)
-  Sigma[which(Sigma==0)] <- 0.1
+  Sigma[which(Sigma==0)] <- 0.3
   #---
   Sigma.chol <- as.matrix(chol(Sigma))
   A <- matrix(rnorm(1050*nsubjects), nsubjects, 1050) %*% Sigma.chol

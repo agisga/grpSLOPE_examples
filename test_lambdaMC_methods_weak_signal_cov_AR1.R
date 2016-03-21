@@ -70,7 +70,7 @@ TestGroupSLOPE <- function(n.significant, n.subjects, n.predictors, fdr, verbose
   signal.strength <- sqrt( 4*log(n.group) / (1 - n.group^(-2/m)) - m )
 
   for(i in block.significant){
-    b[group.id[[i]]] <- signal.strength
+    b[group.id[[i]]] <- signal.strength / sqrt(m)
   }
 
   # Create the response vector y
@@ -88,12 +88,11 @@ TestGroupSLOPE <- function(n.significant, n.subjects, n.predictors, fdr, verbose
 
   # gaussianMC Group SLOPE
   grpslope.g <- grpSLOPE(X=A, y=y, group=group, fdr=fdr, lambda="gaussianMC",
-                         sigma=1, n.MC=10, MC.reps=5000,
+                         sigma=1, n.MC=20, MC.reps=5000,
                          orthogonalize=FALSE, normalize=FALSE)
   # chiMC Group SLOPE
   grpslope.c <- grpSLOPE(X=A, y=y, group=group, fdr=fdr, lambda="chiMC",
-                         sigma=1, n.MC=10, MC.reps=5000,
-                         normalize=FALSE)
+                         sigma=1, n.MC=20, MC.reps=5000, normalize=FALSE)
   # chiMean Group SLOPE
   grpslope.m <- grpSLOPE(X=A, y=y, group=group, fdr=fdr, lambda="chiMean",
                          sigma=1, normalize=FALSE)
@@ -147,11 +146,11 @@ TestGroupSLOPE <- function(n.significant, n.subjects, n.predictors, fdr, verbose
 m <- 5
 
 fdr <- 0.1
-n.predictors <- 100
+n.predictors <- 500
 n.group <- n.predictors / m
 n.replications <- 100
-n.subjects <- 100
-sparsity.vec <- seq(0.05,0.5,l=5)
+n.subjects <- 300
+sparsity.vec <- seq(0.05,0.8,l=9)
 total.discoveries.g <- total.discoveries.c <- total.discoveries.m <- vector(mode="list")
 true.discoveries.g <- true.discoveries.c <- true.discoveries.m <- vector(mode="list")
 false.discoveries.g <- false.discoveries.c <- false.discoveries.m <- vector(mode="list")
@@ -239,7 +238,7 @@ for(j in 1:length(sparsity.vec)){
 
 #*** Save everything ***
 
-save(list = ls(all.names = TRUE), file = "test_lambdaMC_methods_weak_signal_cor_AR1.RData")
+save(list = ls(all.names = TRUE), file = "test_lambdaMC_methods_weak_signal_cov_AR1.RData")
 
 #*** Do Plots ***
 
@@ -247,7 +246,7 @@ num.signif.blocks <- as.integer(sparsity.vec*n.group)
 
 # gaussianMC Group SLOPE
 
-postscript(file="gaussianMC_weak_signal_cor_AR1.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="gaussianMC_weak_signal_cov_AR1.eps", horizontal=FALSE, width=400, height=400)
 
 plot(num.signif.blocks, g.power, type="b", xlab="Number of significant groups", 
      ylab="FDR and Power", main="lambda = gaussianMC", ylim=c(0,1), pch=2, lty=2, col="blue")
@@ -269,7 +268,7 @@ dev.off()
 
 # chiMC Group SLOPE
 
-postscript(file="chiMC_weak_signal_cor_AR1.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="chiMC_weak_signal_cov_AR1.eps", horizontal=FALSE, width=400, height=400)
 
 plot(num.signif.blocks, c.power, type="b", xlab="Number of significant groups", 
      ylab="FDR and Power", main="lambda = chiMC", ylim=c(0,1), pch=2, lty=2, col="blue")
@@ -291,7 +290,7 @@ dev.off()
 
 # chiMean Group SLOPE
 
-postscript(file="chiMean_weak_signal_cor_AR1.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="chiMean_weak_signal_cov_AR1.eps", horizontal=FALSE, width=400, height=400)
 
 plot(num.signif.blocks, m.power, type="b", xlab="Number of significant groups", 
      ylab="FDR and Power", main="lambda = chiMean", ylim=c(0,1), pch=2, lty=2, col="blue")
@@ -313,7 +312,7 @@ dev.off()
 
 # Selected Groups
 
-postscript(file="selected_by_lambdaMC_weak_signal_cor_AR1.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="selected_by_lambdaMC_weak_signal_cov_AR1.eps", horizontal=FALSE, width=400, height=400)
 
 avg.total.discoveries.g <- apply(as.matrix(as.data.frame(total.discoveries.g)), 2, mean)
 avg.total.discoveries.c <- apply(as.matrix(as.data.frame(total.discoveries.c)), 2, mean)
@@ -331,3 +330,9 @@ legend(30, 20, c("gaussianMC", "chiMC", "chiMean"), pch=1:3, lty=1:3, col=c("red
 abline(0, 1, col="grey")
 
 dev.off()
+
+
+print("c.fdr:")
+print(c.fdr)
+print("m.fdr:")
+print(m.fdr)
