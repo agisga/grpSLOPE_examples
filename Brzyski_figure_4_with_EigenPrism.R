@@ -14,6 +14,8 @@
 
 library(grpSLOPE)
 library(CVXfromR)
+library(doParallel)
+registerDoParallel(cores=2)
 
 set.seed(1)
 

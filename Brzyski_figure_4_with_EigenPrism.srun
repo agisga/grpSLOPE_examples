@@ -6,6 +6,7 @@
 #SBATCH --ntasks-per-node=1    # Number of Tasks per Node
 
 module load R
+module load matlab/r2015b
 
 Rscript Brzyski_figure_4_with_EigenPrism.R
 
