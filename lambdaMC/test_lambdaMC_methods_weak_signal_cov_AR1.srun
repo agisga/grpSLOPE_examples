@@ -1,0 +1,11 @@
+#!/bin/bash
+#SBATCH --qos=long              # Quality of Service
+#SBATCH --job-name=grpSLOPE     # Job Name
+#SBATCH --time=2-00:00:00       # WallTime
+#SBATCH --nodes=1               # Number of Nodes
+#SBATCH --ntasks-per-node=20    # Number of Tasks per Node
+
+module load R
+
+Rscript test_lambdaMC_methods_weak_signal_cov_AR1.R
+

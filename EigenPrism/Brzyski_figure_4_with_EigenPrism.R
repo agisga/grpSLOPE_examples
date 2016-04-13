@@ -14,13 +14,14 @@
 
 library(grpSLOPE)
 library(CVXfromR)
-library(doParallel)
-registerDoParallel(cores=2)
+
+command.args <- commandArgs(trailingOnly=TRUE)
+output.file <- command.args[1]
+n.iter <- command.args[2]
 
 set.seed(1)
 
 fdr <- 0.1
-n.iter <- 2#200
 
 n.group <- 1000
 group.length <- rbinom(n.group, 1000, 0.008)
@@ -121,8 +122,9 @@ one.iteration <- function(n.signif){
 }
 
 for (k in 1:length(n.relevant)) {
-  parallel.results <- foreach(i=1:n.iter) %dopar% {
-    one.iteration(n.relevant[k])
+  results <- list()
+  for (i in 1:n.iter) {
+    results[[i]] <- one.iteration(n.relevant[k])
   }
 
   FDR.vec   <- rep(NA, n.iter)
@@ -131,10 +133,10 @@ for (k in 1:length(n.relevant)) {
   is.sigma.positive[[k]] <- rep(NA, n.iter)
 
   for (j in 1:n.iter) {
-    FDR.vec[j]   <- parallel.results[[j]]$FDR
-    pow.vec[j]   <- parallel.results[[j]]$pow
-    sigma.vec[j] <- parallel.results[[j]]$sigma
-    is.sigma.positive[[k]][j] <- parallel.results[[j]]$positive
+    FDR.vec[j]   <- results[[j]]$FDR
+    pow.vec[j]   <- results[[j]]$pow
+    sigma.vec[j] <- results[[j]]$sigma
+    is.sigma.positive[[k]][j] <- results[[j]]$positive
   }
 
   FDR[k] <- mean(FDR.vec)
@@ -151,61 +153,4 @@ for (k in 1:length(n.relevant)) {
 # Save
 #####################################################
 
-save(list=ls(all.names=TRUE), file="Brzyski_figure_4_with_EigenPrism.RData")
-
-#####################################################
-# Analog to Figure 4 (a) - q=0.1, Brzyski et. al. (2015)
-#####################################################
-
-postscript(file="Brzyski_figure_4a_with_EigenPrism.eps", 
-           horizontal=FALSE, width=400, height=400)
-
-# plot FDR -------------------------
-plot(n.relevant, FDR, ylim=c(0,0.25), type="b", lty=2,
-     xlab="Number of relevant groups", ylab="Estimated gFDR", 
-     main="corrected lambdas + sigma estimation")
-
-# FDR nominal level
-abline(fdr, 0)
-
-legend(9, 0.24, c("gFDR, q=0.1", "Theoretical upper bound"), lty=c(2,1), pch=c(1,NA))
-
-# FDR error bars
-FDR.se <- FDR.sd/sqrt(n.iter)
-segments(n.relevant, FDR-2*FDR.se, n.relevant, FDR+2*FDR.se, col="blue")
-segments(n.relevant-1, FDR-2*FDR.se, n.relevant+1, FDR-2*FDR.se, col="blue")
-segments(n.relevant-1, FDR+2*FDR.se, n.relevant+1, FDR+2*FDR.se, col="blue")
-
-dev.off()
-
-####################################################################
-# Analog to Figure 4 (b) - q=0.1, Brzyski et. al. (2015)
-####################################################################
-
-postscript(file="Brzyski_figure_4b_with_EigenPrism.eps", 
-           horizontal=FALSE, width=400, height=400)
-
-# plot power -------------------------
-plot(n.relevant, pow, ylim=c(0,1), type="b", col=1, pch=1,
-     xlab="Number of relevant groups", ylab="Estimated power", 
-     main="Power")
-
-# Power error bars
-pow.se <- pow.sd/sqrt(n.iter)
-segments(n.relevant, pow-2*pow.se, n.relevant, pow+2*pow.se, col="blue")
-segments(n.relevant-1, pow-2*pow.se, n.relevant+1, pow-2*pow.se, col="blue")
-segments(n.relevant-1, pow+2*pow.se, n.relevant+1, pow+2*pow.se, col="blue")
-
-dev.off()
-
-####################################################################
-# Analog to Figure 4 (c) - q=0.1, Brzyski et. al. (2015)
-####################################################################
-
-postscript(file="Brzyski_figure_4c_with_EigenPrism.eps", 
-           horizontal=FALSE, width=400, height=400)
-
-hist(group.length, xlab = "Group size",
-     main = "Histogram of group sizes")
-
-dev.off()
+save(list=ls(all.names=TRUE), file=output.file)

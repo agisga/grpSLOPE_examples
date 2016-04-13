@@ -1,0 +1,10 @@
+#!/bin/bash
+#SBATCH --qos=normal
+#SBATCH --job-name=EigenP20
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem=128000
+module load R
+module load matlab/r2015b
+Rscript /home/agossman/github/grpSLOPE_examples/Brzyski_figure_4_with_EigenPrism.R /home/agossman/github/grpSLOPE_examples/EigenPrism/Brzyski_figure_4_with_EigenPrism_20.RData 10
