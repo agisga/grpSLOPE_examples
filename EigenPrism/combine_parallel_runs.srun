@@ -1,0 +1,10 @@
+#!/bin/bash
+#SBATCH --qos=normal
+#SBATCH --job-name=combine
+#SBATCH --time=00:10:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+
+module load R
+
+Rscript /home/agossman/github/grpSLOPE_examples/EigenPrism/combine_parallel_runs.R
