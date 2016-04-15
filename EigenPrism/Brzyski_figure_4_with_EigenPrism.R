@@ -40,8 +40,9 @@ set.seed(rand.seed)
 
 #--- initialize some other parameters
 
-n <- 5000
-p <- length(group)
+fdr <- 0.1
+n   <- 5000
+p   <- length(group)
 
 Bfun <- function(l) {
   B <- 4*log(n.group) / (1 - n.group^(-2/l)) - l
@@ -60,7 +61,7 @@ sigma    <- rep(NA, length(n.relevant))
 sigma.sd <- rep(NA, length(n.relevant))
 
 # this list holds TRUE/FALSE values, which signify when the EigenPrism estimate
-# of sigma is positive or negotive
+# of sigma is positive or negative
 is.sigma.positive <- list()
 
 #--- this function generates a random dataset, performs EigenPrism, and fits a GroupSLOPE model
@@ -134,8 +135,6 @@ one.iteration <- function(n.signif){
 }
 
 #--- fit n.iter Group SLOPE models for each sparsity level
-
-fdr <- 0.1
 
 for (k in 1:length(n.relevant)) {
   results <- list()
