@@ -19,9 +19,12 @@ command.args <- commandArgs(trailingOnly=TRUE)
 output.file <- command.args[1]
 n.iter <- command.args[2]
 
-set.seed(1)
+#--- generate group structure
 
-fdr <- 0.1
+rand.seed <- sample(1:1000, 1)
+
+# set seed to generate the same groups each time
+set.seed(1)
 
 n.group <- 1000
 group.length <- rbinom(n.group, 1000, 0.008)
@@ -30,6 +33,12 @@ for (i in 1:n.group) {
   group <- c(group, rep(i, group.length[i]))
 }
 group.id <- getGroupID(group)
+
+# reset seed to a random number, in order to generate 
+# different X and y each time the script is called
+set.seed(rand.seed)
+
+#--- initialize some other parameters
 
 n <- 5000
 p <- length(group)
@@ -42,6 +51,7 @@ signal.strength <- sum(Bfun(group.length)) / n.group
 
 n.relevant <- floor(seq(1, 60, length=7))
 
+# vectors to hold the final results
 FDR      <- rep(NA, length(n.relevant))
 FDR.sd   <- rep(NA, length(n.relevant))
 pow      <- rep(NA, length(n.relevant))
@@ -52,6 +62,8 @@ sigma.sd <- rep(NA, length(n.relevant))
 # this list holds TRUE/FALSE values, which signify when the EigenPrism estimate
 # of sigma is positive or negotive
 is.sigma.positive <- list()
+
+#--- this function generates a random dataset, performs EigenPrism, and fits a GroupSLOPE model
 
 one.iteration <- function(n.signif){
   # generate and normalize the model matrix
@@ -121,6 +133,10 @@ one.iteration <- function(n.signif){
   return(list(FDR=FDR, pow=pow, sigma=sigma, positive=positive))
 }
 
+#--- fit n.iter Group SLOPE models for each sparsity level
+
+fdr <- 0.1
+
 for (k in 1:length(n.relevant)) {
   results <- list()
   for (i in 1:n.iter) {
@@ -149,8 +165,6 @@ for (k in 1:length(n.relevant)) {
   print(paste(k, "sparsity levels completed"))
 }
 
-#####################################################
-# Save
-#####################################################
+#--- Save the results
 
 save(list=ls(all.names=TRUE), file=output.file)
