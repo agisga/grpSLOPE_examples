@@ -119,12 +119,12 @@ save(list=ls(all.names=TRUE), file="Brzyski_figure_4.RData")
 # Figure 4 (a) - q=0.1, Brzyski et. al. (2015)
 #####################################################
 
-postscript(file="Brzyski_figure_4a.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="Brzyski_figure_4a.eps", horizontal=FALSE, width=6, height=6)
 
 # plot FDR -------------------------
 plot(n.relevant, FDR, ylim=c(0,0.25), type="b", lty=2,
      xlab="Number of relevant groups", ylab="Estimated gFDR", 
-     main="corrected lambdas + sigma estimation")
+     main="Group SLOPE with iterative sigma estimation")
 
 # FDR nominal level
 abline(fdr, 0)
@@ -143,12 +143,12 @@ dev.off()
 # Figure 4 (b) - q=0.1, Brzyski et. al. (2015)
 ####################################################################
 
-postscript(file="Brzyski_figure_4b.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="Brzyski_figure_4b.eps", horizontal=FALSE, width=6, height=6)
 
 # plot power -------------------------
 plot(n.relevant, pow, ylim=c(0,1), type="b", col=1, pch=1,
      xlab="Number of relevant groups", ylab="Estimated power", 
-     main="Power")
+     main="Group SLOPE with iterative sigma estimation")
 
 # Power error bars
 pow.se <- pow.sd/sqrt(n.iter)
@@ -162,7 +162,7 @@ dev.off()
 # Figure 4 (c) - q=0.1, Brzyski et. al. (2015)
 ####################################################################
 
-postscript(file="Brzyski_figure_4c.eps", horizontal=FALSE, width=400, height=400)
+postscript(file="Brzyski_figure_4c.eps", horizontal=FALSE, width=6, height=6)
 
 hist(group.length, xlab = "Group size",
      main = "Histogram of group sizes")
