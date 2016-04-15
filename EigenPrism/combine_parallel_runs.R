@@ -74,7 +74,7 @@ plot(n.relevant, pow.combined, ylim=c(0,1), type="b", col=1, pch=1,
      main="Group SLOPE with Eigen Prism")
 
 # Power error bars
-pow.se.combined <- pow.sd.combined/sqrt(n.iter.per.run)
+pow.se.combined <- pow.sd.combined/sqrt(n.runs*n.iter.per.run)
 segments(n.relevant, pow.combined-2*pow.se.combined, n.relevant, 
          pow.combined+2*pow.se.combined, col="blue")
 segments(n.relevant-1, pow.combined-2*pow.se.combined, n.relevant+1, 
