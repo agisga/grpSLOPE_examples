@@ -21,7 +21,7 @@ one.iteration <- function(n.signif, X, group, fdr, signal.strength){
   # generate coeffient vector, pick relevant groups at random
   b <- rep(0, p)
   ind.relevant <- sample(1:n.group, n.signif)
-  for (j in ind.relevant) { b[group.id[[j]]] <- a }
+  for (j in ind.relevant) { b[group.id[[j]]] <- signal.strength }
 
   # generate the response vector
   y <- X %*% b + rnorm(p, sd=1)
