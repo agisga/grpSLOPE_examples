@@ -112,10 +112,12 @@ save(list=ls(all.names=TRUE), file="skewed_grp_size_distr.RData")
 pdf(file="FDR_and_pow.pdf")
 
 ggplot(FDR.and.pow) +
+  geom_segment(mapping = aes(x = 0, xend = tail(n.relevant, 1), y = fdr, 
+                             yend = fdr*(n.group - tail(n.relevant, 1))/n.group), 
+               linetype = 2, color = "black") +
   geom_line(mapping = aes(x = n.relevant, y = value, color = key)) + 
   geom_point(mapping = aes(x = n.relevant, y = value, color = key)) +
   geom_ribbon(mapping = aes(x = n.relevant, ymin = lwr, ymax = upr, fill = key), alpha=0.25) +
-  geom_segment(mapping = aes(x = 0, xend = tail(n.relevant, 1), y = fdr, yend = fdr), linetype = 2, color = "darkgrey") +
   xlab("Num. significant groups") + ylab("Estimated FDR and Power") +
   guides(fill=guide_legend(title="+-2*SE"), color=guide_legend(title="")) +
   coord_cartesian(ylim = c(0, 1))
