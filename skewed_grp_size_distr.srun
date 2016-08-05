@@ -1,0 +1,11 @@
+#!/bin/bash
+#SBATCH --qos=normal            # Quality of Service
+#SBATCH --job-name=grpSLOPE     # Job Name
+#SBATCH --time=03:00:00         # WallTime
+#SBATCH --nodes=1               # Number of Nodes
+#SBATCH --ntasks-per-node=20    # Number of Tasks per Node
+
+module load R/3.2.5-intel
+
+Rscript skewed_grp_size_distr.R
+
