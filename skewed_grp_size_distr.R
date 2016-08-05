@@ -15,6 +15,9 @@ registerDoParallel(cores = as.integer(Sys.getenv("SLURM_NTASKS_PER_NODE")))
 
 #--- one simulation (to be repeated many times at various sparsity levels)
 one.iteration <- function(n.signif, X, group, fdr, signal.strength){
+  group.id <- getGroupID(group)
+  n.group <- length(group.id)
+
   # generate coeffient vector, pick relevant groups at random
   b <- rep(0, p)
   ind.relevant <- sample(1:n.group, n.signif)
