@@ -112,7 +112,7 @@ FDR.and.pow <- FDR.and.pow %>% left_join(lwr) %>% left_join(upr)
 save(list=ls(all.names=TRUE), file="skewed_grp_size_distr.RData")
 
 # plot estimated FDR and power
-pdf(file="./img/FDR_and_pow.pdf")
+pdf(file="./img/skewed_grp_size_distr_FDR_and_pow.pdf")
 
 ggplot(FDR.and.pow) +
   geom_segment(mapping = aes(x = 0, xend = tail(n.relevant, 1), y = fdr, 
