@@ -67,10 +67,10 @@ a <- sum(Bfun(group.length)) / sum(sqrt(group.length))
 fdr <- 0.1
 
 # how many times the simulation is repeated
-n.replications <- 50 
+n.replications <- 100 
 
 # considered numbers of truly relevant groups
-n.relevant <- floor(seq(1, 250, length=11))
+n.relevant <- c(0, floor(seq(5, 250, length=10)))
 
 # run the simulations
 set.seed(20160804)
@@ -112,7 +112,7 @@ FDR.and.pow <- FDR.and.pow %>% left_join(lwr) %>% left_join(upr)
 save(list=ls(all.names=TRUE), file="skewed_grp_size_distr.RData")
 
 # plot estimated FDR and power
-pdf(file="FDR_and_pow.pdf")
+pdf(file="./img/FDR_and_pow.pdf")
 
 ggplot(FDR.and.pow) +
   geom_segment(mapping = aes(x = 0, xend = tail(n.relevant, 1), y = fdr, 
