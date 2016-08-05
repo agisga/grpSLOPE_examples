@@ -64,7 +64,7 @@ a <- sum(Bfun(group.length)) / sum(sqrt(group.length))
 fdr <- 0.1
 
 # how many times the simulation is repeated
-n.replications <- 300 
+n.replications <- 50 
 
 # considered numbers of truly relevant groups
 n.relevant <- floor(seq(1, 250, length=11))
@@ -121,82 +121,3 @@ ggplot(FDR.and.pow) +
   coord_cartesian(ylim = c(0, 1))
 
 dev.off()
-
-
-
-
-
-
-
-
-
-
-
-
-  FDP.vec <- rep(NA, n.replications)
-  pow.vec <- rep(NA, n.replications)
-
-  for (j in 1:n.replications) {
-    FDP.vec[j] <- parallel.results[[j]]$FDP
-    pow.vec[j] <- parallel.results[[j]]$pow
-  }
-
-  FDR.mean[k] <- mean(FDR.mean.vec)
-  FDR.mean.sd[k] <- sd(FDR.mean.vec)
-  pow.mean[k] <- mean(pow.mean.vec)
-  pow.mean.sd[k] <- sd(pow.mean.vec)
-  
-  print(paste(k, "sparsity levels completed"))
-}
-
-#####################################################
-# Figure 1 (a) - q=0.1, Brzyski et. al. (2015)
-#####################################################
-
-# plot FDR -------------------------
-plot(n.relevant, FDR.max, ylim=c(0,0.15), type="b", lty=2,
-     xlab="Number of relevant groups", ylab="Estimated gFDR", 
-     main="gFDR for lambda_max")
-
-# FDR nominal level
-lines(n.relevant, fdr*(n.group-n.relevant)/n.group)
-
-legend(90, 0.14, c("gFDR, q=0.1", "Theoretical upper bound"), lty=c(2,1), pch=c(1,NA))
-
-# FDR error bars
-FDR.max.se <- FDR.max.sd/sqrt(n.replications)
-segments(n.relevant, FDR.max-2*FDR.max.se, n.relevant, FDR.max+2*FDR.max.se, col="blue")
-segments(n.relevant-1, FDR.max-2*FDR.max.se, n.relevant+1, FDR.max-2*FDR.max.se, col="blue")
-segments(n.relevant-1, FDR.max+2*FDR.max.se, n.relevant+1, FDR.max+2*FDR.max.se, col="blue")
-
-#####################################################
-# Figure 1 (b) - q=0.1, Brzyski et. al. (2015)
-#####################################################
-
-# plot FDR -------------------------
-plot(n.relevant, FDR.mean, ylim=c(0,0.15), type="b", lty=2,
-     xlab="Number of relevant groups", ylab="Estimated gFDR", 
-     main="gFDR for lambda_mean")
-
-# FDR nominal level
-lines(n.relevant, fdr*(n.group-n.relevant)/n.group)
-
-legend(90, 0.14, c("gFDR, q=0.1", "Theoretical upper bound"), lty=c(2,1), pch=c(1,NA))
-
-# FDR error bars
-FDR.mean.se <- FDR.mean.sd/sqrt(n.replications)
-segments(n.relevant, FDR.mean-2*FDR.mean.se, n.relevant, FDR.mean+2*FDR.mean.se, col="blue")
-segments(n.relevant-1, FDR.mean-2*FDR.mean.se, n.relevant+1, FDR.mean-2*FDR.mean.se, col="blue")
-segments(n.relevant-1, FDR.mean+2*FDR.mean.se, n.relevant+1, FDR.mean+2*FDR.mean.se, col="blue")
-
-####################################################################
-# Figure 1 (c) - q=0.1, basic/relaxed lambda, Brzyski et. al. (2015)
-####################################################################
-
-# plot power -------------------------
-plot(n.relevant, pow.max, ylim=c(0,1), type="b", col=1, pch=1,
-     xlab="Number of relevant groups", ylab="Estimated power", 
-     main="Power")
-lines(n.relevant, pow.mean, type="b", col=2, pch=2)
-legend(90, 0.4, c("Basic lambda, q=0.1", "Relaxed lambda, q=0.1"),
-       lty=c(1,1), pch=c(1,2), col=c(1,2))
