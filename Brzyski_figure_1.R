@@ -11,7 +11,10 @@ library(ggplot2)
 
 # Adjust the number of cores to the particular system
 library(doParallel)
-registerDoParallel(cores=2)
+registerDoParallel(cores=4)
+
+
+#--- Set up global parameters for the simulation
 
 # auxilliary function to get (group-wise) FDP and power from one grpSLOPE solution object
 get_FDP_and_power <- function(result, true.relevant){
@@ -21,7 +24,6 @@ get_FDP_and_power <- function(result, true.relevant){
   pow <- truepos / length(true.relevant)
   return(c("FDP" = FDP, "pow" = pow))
 }
-
 
 # set X to identity matrix, b/c gSLOPE with orthogonal design is equivalent to a problem with identity mat.
 p <- 5000
@@ -48,6 +50,9 @@ n.relevant <- floor(seq(1, 250, length=11))
 
 # how many times the simulation is repeated
 n.replications <- 300 
+
+
+#--- Simulation main loop
 
 # run the simulations n.replications times at each level of n.relevant,
 # and with each combination of lambda="max", lambda="mean", fdr=0.1, fdr=0.05
@@ -102,6 +107,10 @@ for (k in 1:length(n.relevant)) {
 
   cat("done\n")
 }
+save(parallel.results, "Brzyski_1_results.RData") # keep a backup
+
+
+#--- Collect and summarize simulation results
 
 # collect results in a data frame
 results <- data.frame() %>% tbl_df
@@ -113,6 +122,7 @@ for(k in 1:length(n.relevant)) {
 results.summary <- results %>% select(-replication) %>% group_by(n.relevant) %>% 
   summarize_all(funs(mean, lwr = (mean(.) - 2*sd(.)/sqrt(n.replications)),
                      upr = (mean(.) - 2*sd(.)/sqrt(n.replications))))
+
 
 #--- Plot a figure analogous to Figure 1a-b in Brzyski et. al. (2015)
 
@@ -145,6 +155,7 @@ ggplot(FDR.results) +
   coord_cartesian(ylim = c(0, 0.15))
 
 dev.off()
+ 
 
 #--- Plot a figure analogous to Figure 1c in Brzyski et. al. (2015)
 
