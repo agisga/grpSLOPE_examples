@@ -11,7 +11,7 @@ library(ggplot2)
 
 # Adjust the number of cores to the particular system
 library(doParallel)
-registerDoParallel(cores=4)
+registerDoParallel(cores=(Sys.getenv("SLURM_NTASKS_PER_NODE")))
 
 
 #--- Set up global parameters for the simulation
@@ -139,7 +139,7 @@ upr <- results.summary %>% select(n.relevant, ends_with("FDP_upr")) %>%
 FDR.results <- FDR.results %>% left_join(lwr) %>% left_join(upr)
 
 # plot estimated FDR with error bars 
-png(file="./figures/Brzyski_1ab.png")
+pdf(file="./figures/Brzyski_1ab.pdf")
 
 xend <- tail(n.relevant, 1)
 ggplot(FDR.results) +
@@ -172,7 +172,7 @@ upr <- results.summary %>% select(n.relevant, ends_with("power_upr")) %>%
 power.results <- power.results %>% left_join(lwr) %>% left_join(upr)
 
 # plot estimated FDR with error bars 
-png(file="./figures/Brzyski_1c.png")
+pdf(file="./figures/Brzyski_1c.pdf")
 
 xend <- tail(n.relevant, 1)
 ggplot(power.results) +
