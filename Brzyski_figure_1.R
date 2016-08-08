@@ -1,29 +1,33 @@
-###############################################################################
-###############################################################################
-###############################################################################
-# This code aims to reproduce the data generation, analysis and plots from
+#---------------------------------------------------------------------------
+# This code is based on the simulation study of Figure 1 in
 # D. Brzyski, W. Su, M. Bogdan (2015), "Group SLOPE - adaptive selection of 
 # groups of predictors" (http://arxiv.org/abs/1511.09078)
-###############################################################################
-###############################################################################
-###############################################################################
+#---------------------------------------------------------------------------
 
 library(grpSLOPE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
 
 # Adjust the number of cores to the particular system
 library(doParallel)
-registerDoParallel(cores=6)
+registerDoParallel(cores=2)
 
-############
-# Figure 1
-############
+# auxilliary function to get (group-wise) FDP and power from one grpSLOPE solution object
+get_FDP_and_power <- function(result, true.relevant){
+  truepos <- length(intersect(result$selected, true.relevant))
+  falsepos <- length(result$selected) - truepos
+  FDP <- falsepos / max(1, length(result$selected))
+  pow <- truepos / length(true.relevant)
+  return(c("FDP" = FDP, "pow" = pow))
+}
 
-fdr <- 0.1
-n.iter <- 300
 
+# set X to identity matrix, b/c gSLOPE with orthogonal design is equivalent to a problem with identity mat.
 p <- 5000
 X <- diag(rep(1,p))
-n.group <- 1000
+
+# set the grouping structure
 group <- c(rep(1:200, each=3),
            rep(201:400, each=4),
            rep(401:600, each=5),
@@ -31,136 +35,141 @@ group <- c(rep(1:200, each=3),
            rep(801:1000, each=7))
 group.id <- getGroupID(group)
 group.length <- sapply(group.id, FUN=length)
+n.group <- length(group.id)
 
+# determine signal strength, such as used in Figure 1 of Brzyski et. al. (2015)
 Bfun <- function(l) {
   sqrt(4*log(n.group) / (1 - n.group^(-2/l)) - l)
 }
-a <- sum(Bfun(group.length)) / sum(sqrt(group.length))
+signal.strength <- sum(Bfun(group.length)) / sum(sqrt(group.length))
 
+# considered numbers of truly relevant groups
 n.relevant <- floor(seq(1, 250, length=11))
 
-FDR.max    <- rep(NA, length(n.relevant))
-FDR.max.sd <- rep(NA, length(n.relevant))
-pow.max    <- rep(NA, length(n.relevant))
-pow.max.sd <- rep(NA, length(n.relevant))
+# how many times the simulation is repeated
+n.replications <- 300 
 
-FDR.mean    <- rep(NA, length(n.relevant))
-FDR.mean.sd <- rep(NA, length(n.relevant))
-pow.mean    <- rep(NA, length(n.relevant))
-pow.mean.sd <- rep(NA, length(n.relevant))
-
-one.iteration <- function(n.signif){
-  # generate coeffient vector, pick relevant groups at random
-  b <- rep(0, p)
-  ind.relevant <- sample(1:n.group, n.signif)
-  for (j in ind.relevant) { b[group.id[[j]]] <-a }
-
-  # generate the response vector
-  y <- X %*% b + rnorm(p, sd=1)
-
-  # get Group SLOPE solution
-  b.grpSLOPE.max <- grpSLOPE(X=X, y=y, group=group, fdr=fdr,
-                             lambda="chiOrthoMax", sigma=1, verbose=FALSE,
-                             orthogonalize=FALSE, normalize=FALSE)
-  b.grpSLOPE.mean <- grpSLOPE(X=X, y=y, group=group, fdr=fdr,
-                              lambda="chiOrthoMean", sigma=1, verbose=FALSE,
-                              orthogonalize=FALSE, normalize=FALSE)
-
-  # FDR and power
-  true.relevant <- names(group.id)[ind.relevant]
-  truepos <- length(intersect(b.grpSLOPE.max$selected, true.relevant))
-  falsepos <- length(b.grpSLOPE.max$selected) - truepos
-  FDR.max <- falsepos / max(1, length(b.grpSLOPE.max$selected))
-  pow.max <- truepos / length(true.relevant)
-
-  true.relevant <- names(group.id)[ind.relevant]
-  truepos <- length(intersect(b.grpSLOPE.mean$selected, true.relevant))
-  falsepos <- length(b.grpSLOPE.mean$selected) - truepos
-  FDR.mean <- falsepos / max(1, length(b.grpSLOPE.mean$selected))
-  pow.mean <- truepos / length(true.relevant)
-
-  return(list(FDR.max=FDR.max, pow.max=pow.max,
-              FDR.mean=FDR.mean, pow.mean=pow.mean))
-}
-
+# run the simulations n.replications times at each level of n.relevant,
+# and with each combination of lambda="max", lambda="mean", fdr=0.1, fdr=0.05
+set.seed(20160807)
+parallel.results <- vector(mode="list")
 for (k in 1:length(n.relevant)) {
-  parallel.results <- foreach(i=1:n.iter) %dopar% {
-    one.iteration(n.relevant[k])
+  cat(paste("sparsity level", k, "started"))
+
+  parallel.results[[k]] <- foreach(i=1:n.replications, .combine = rbind) %dopar% {
+    cat(".")
+
+    # generate coeffient vector, pick relevant groups at random
+    b <- rep(0, p)
+    n.signif <- n.relevant[k]
+    ind.relevant <- sample(1:n.group, n.signif)
+    for (j in ind.relevant) { b[group.id[[j]]] <- signal.strength }
+
+    # generate the response vector
+    y <- X %*% b + rnorm(p, sd=1)
+
+    # get Group SLOPE solutions with different lambda and fdr values
+    lambda.max.1 <- grpSLOPE(X=X, y=y, group=group, fdr=0.1,
+                             lambda="max", sigma=1, verbose=FALSE,
+                             orthogonalize=FALSE, normalize=FALSE)
+    lambda.max.05 <- grpSLOPE(X=X, y=y, group=group, fdr=0.05,
+                              lambda="max", sigma=1, verbose=FALSE,
+                              orthogonalize=FALSE, normalize=FALSE)
+    lambda.mean.1 <- grpSLOPE(X=X, y=y, group=group, fdr=0.1,
+                              lambda="mean", sigma=1, verbose=FALSE,
+                              orthogonalize=FALSE, normalize=FALSE)
+    lambda.mean.05 <- grpSLOPE(X=X, y=y, group=group, fdr=0.05,
+                               lambda="mean", sigma=1, verbose=FALSE,
+                               orthogonalize=FALSE, normalize=FALSE)
+
+    # get the FDPs and powers of the grpSLOPE solutions
+    true.relevant <- names(group.id)[ind.relevant]
+    FDPs.and.powers <- rep(NA, 10)
+    names(FDPs.and.powers) <- c("n.relevant", "replication",
+                                "lambda.max.1.FDP", "lambda.max.1.power",
+                                "lambda.max.05.FDP", "lambda.max.05.power",
+                                "lambda.mean.1.FDP", "lambda.mean.1.power",
+                                "lambda.mean.05.FDP", "lambda.mean.05.power")
+    FDPs.and.powers["n.relevant"] <- length(true.relevant)
+    FDPs.and.powers["replication"] <- i
+    FDPs.and.powers[c("lambda.max.1.FDP", "lambda.max.1.power")] <- get_FDP_and_power(lambda.max.1, true.relevant)
+    FDPs.and.powers[c("lambda.max.05.FDP", "lambda.max.05.power")] <- get_FDP_and_power(lambda.max.05, true.relevant)
+    FDPs.and.powers[c("lambda.mean.1.FDP", "lambda.mean.1.power")] <- get_FDP_and_power(lambda.mean.1, true.relevant)
+    FDPs.and.powers[c("lambda.mean.05.FDP", "lambda.mean.05.power")] <- get_FDP_and_power(lambda.mean.05, true.relevant)
+
+    FDPs.and.powers
   }
 
-  FDR.max.vec  <- rep(NA, n.iter)
-  pow.max.vec  <- rep(NA, n.iter)
-  FDR.mean.vec <- rep(NA, n.iter)
-  pow.mean.vec <- rep(NA, n.iter)
-
-  for (j in 1:n.iter) {
-    FDR.max.vec[j]  <- parallel.results[[j]]$FDR.max
-    pow.max.vec[j]  <- parallel.results[[j]]$pow.max
-    FDR.mean.vec[j] <- parallel.results[[j]]$FDR.mean
-    pow.mean.vec[j] <- parallel.results[[j]]$pow.mean
-  }
-
-  FDR.max[k] <- mean(FDR.max.vec)
-  FDR.max.sd[k] <- sd(FDR.max.vec)
-  pow.max[k] <- mean(pow.max.vec)
-  pow.max.sd[k] <- sd(pow.max.vec)
-
-  FDR.mean[k] <- mean(FDR.mean.vec)
-  FDR.mean.sd[k] <- sd(FDR.mean.vec)
-  pow.mean[k] <- mean(pow.mean.vec)
-  pow.mean.sd[k] <- sd(pow.mean.vec)
-  
-  print(paste(k, "sparsity levels completed"))
+  cat("done\n")
 }
 
-#####################################################
-# Figure 1 (a) - q=0.1, Brzyski et. al. (2015)
-#####################################################
+# collect results in a data frame
+results <- data.frame() %>% tbl_df
+for(k in 1:length(n.relevant)) {
+  results <- bind_rows(results, tbl_df(parallel.results[[k]]))
+}
 
-# plot FDR -------------------------
-plot(n.relevant, FDR.max, ylim=c(0,0.15), type="b", lty=2,
-     xlab="Number of relevant groups", ylab="Estimated gFDR", 
-     main="gFDR for lambda_max")
+# get means and error bars for FDP and power
+results.summary <- results %>% select(-replication) %>% group_by(n.relevant) %>% 
+  summarize_all(funs(mean, lwr = (mean(.) - 2*sd(.)/sqrt(n.replications)),
+                     upr = (mean(.) - 2*sd(.)/sqrt(n.replications))))
 
-# FDR nominal level
-lines(n.relevant, fdr*(n.group-n.relevant)/n.group)
+#--- Plot a figure analogous to Figure 1a-b in Brzyski et. al. (2015)
 
-legend(90, 0.14, c("gFDR, q=0.1", "Theoretical upper bound"), lty=c(2,1), pch=c(1,NA))
+# pre-process for plotting
+FDR.results <- results.summary %>% select(n.relevant, ends_with("FDP_mean")) %>% 
+  gather(scenario, FDR, -n.relevant) %>%
+  mutate(scenario = gsub("\\.FDP_mean", "", scenario))
+lwr <- results.summary %>% select(n.relevant, ends_with("FDP_lwr")) %>% 
+  gather(scenario, lwr, -n.relevant) %>%
+  mutate(scenario = gsub("\\.FDP_lwr", "", scenario))
+upr <- results.summary %>% select(n.relevant, ends_with("FDP_upr")) %>% 
+  gather(scenario, upr, -n.relevant) %>%
+  mutate(scenario = gsub("\\.FDP_upr", "", scenario))
+FDR.results <- FDR.results %>% left_join(lwr) %>% left_join(upr)
 
-# FDR error bars
-FDR.max.se <- FDR.max.sd/sqrt(n.iter)
-segments(n.relevant, FDR.max-2*FDR.max.se, n.relevant, FDR.max+2*FDR.max.se, col="blue")
-segments(n.relevant-1, FDR.max-2*FDR.max.se, n.relevant+1, FDR.max-2*FDR.max.se, col="blue")
-segments(n.relevant-1, FDR.max+2*FDR.max.se, n.relevant+1, FDR.max+2*FDR.max.se, col="blue")
+# plot estimated FDR with error bars 
+png(file="./figures/Brzyski_1ab.png")
 
-#####################################################
-# Figure 1 (b) - q=0.1, Brzyski et. al. (2015)
-#####################################################
+xend <- tail(n.relevant, 1)
+ggplot(FDR.results) +
+  geom_segment(mapping = aes(x = 0, xend = xend, y = 0.1, yend = 0.1*(n.group - xend)/n.group), 
+               linetype = 2, color = "black") +
+  geom_segment(mapping = aes(x = 0, xend = xend, y = 0.05, yend = 0.05*(n.group - xend)/n.group), 
+               linetype = 2, color = "black") +
+  geom_line(mapping = aes(x = n.relevant, y = FDR, color = scenario)) + 
+  geom_point(mapping = aes(x = n.relevant, y = FDR, color = scenario)) +
+  geom_ribbon(mapping = aes(x = n.relevant, ymin = lwr, ymax = upr, fill = scenario), alpha=0.25) +
+  xlab("Num. significant groups") + ylab("Estimated gFDR") +
+  guides(fill=guide_legend(title="+/-2SE"), color=guide_legend(title="")) +
+  coord_cartesian(ylim = c(0, 0.15))
 
-# plot FDR -------------------------
-plot(n.relevant, FDR.mean, ylim=c(0,0.15), type="b", lty=2,
-     xlab="Number of relevant groups", ylab="Estimated gFDR", 
-     main="gFDR for lambda_mean")
+dev.off()
 
-# FDR nominal level
-lines(n.relevant, fdr*(n.group-n.relevant)/n.group)
+#--- Plot a figure analogous to Figure 1c in Brzyski et. al. (2015)
 
-legend(90, 0.14, c("gFDR, q=0.1", "Theoretical upper bound"), lty=c(2,1), pch=c(1,NA))
+# pre-process for plotting
+power.results <- results.summary %>% select(n.relevant, ends_with("power_mean")) %>% 
+  gather(scenario, power, -n.relevant) %>%
+  mutate(scenario = gsub("\\.power_mean", "", scenario))
+lwr <- results.summary %>% select(n.relevant, ends_with("power_lwr")) %>% 
+  gather(scenario, lwr, -n.relevant) %>%
+  mutate(scenario = gsub("\\.power_lwr", "", scenario))
+upr <- results.summary %>% select(n.relevant, ends_with("power_upr")) %>% 
+  gather(scenario, upr, -n.relevant) %>%
+  mutate(scenario = gsub("\\.power_upr", "", scenario))
+power.results <- power.results %>% left_join(lwr) %>% left_join(upr)
 
-# FDR error bars
-FDR.mean.se <- FDR.mean.sd/sqrt(n.iter)
-segments(n.relevant, FDR.mean-2*FDR.mean.se, n.relevant, FDR.mean+2*FDR.mean.se, col="blue")
-segments(n.relevant-1, FDR.mean-2*FDR.mean.se, n.relevant+1, FDR.mean-2*FDR.mean.se, col="blue")
-segments(n.relevant-1, FDR.mean+2*FDR.mean.se, n.relevant+1, FDR.mean+2*FDR.mean.se, col="blue")
+# plot estimated FDR with error bars 
+png(file="./figures/Brzyski_1c.png")
 
-####################################################################
-# Figure 1 (c) - q=0.1, basic/relaxed lambda, Brzyski et. al. (2015)
-####################################################################
+xend <- tail(n.relevant, 1)
+ggplot(power.results) +
+  geom_line(mapping = aes(x = n.relevant, y = power, color = scenario)) + 
+  geom_point(mapping = aes(x = n.relevant, y = power, color = scenario)) +
+  geom_ribbon(mapping = aes(x = n.relevant, ymin = lwr, ymax = upr, fill = scenario), alpha=0.25) +
+  xlab("Num. significant groups") + ylab("Estimated power") +
+  guides(fill=guide_legend(title="+/-2SE"), color=guide_legend(title="")) +
+  coord_cartesian(ylim = c(0.3, 1))
 
-# plot power -------------------------
-plot(n.relevant, pow.max, ylim=c(0,1), type="b", col=1, pch=1,
-     xlab="Number of relevant groups", ylab="Estimated power", 
-     main="Power")
-lines(n.relevant, pow.mean, type="b", col=2, pch=2)
-legend(90, 0.4, c("Basic lambda, q=0.1", "Relaxed lambda, q=0.1"),
-       lty=c(1,1), pch=c(1,2), col=c(1,2))
+dev.off()
