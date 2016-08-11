@@ -5,7 +5,7 @@
 #SBATCH --nodes=1               # Number of Nodes
 #SBATCH --ntasks-per-node=20    # Number of Tasks per Node
 
-module load R
+module load R/3.2.5-intel
 
 Rscript Brzyski_figure_4.R
 

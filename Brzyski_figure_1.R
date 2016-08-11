@@ -11,7 +11,7 @@ library(ggplot2)
 
 # Adjust the number of cores to the particular system
 library(doParallel)
-registerDoParallel(cores=(Sys.getenv("SLURM_NTASKS_PER_NODE")))
+registerDoParallel(cores=as.integer(Sys.getenv("SLURM_NTASKS_PER_NODE")))
 
 
 #--- Set up global parameters for the simulation
@@ -39,7 +39,7 @@ group.id <- getGroupID(group)
 group.length <- sapply(group.id, FUN=length)
 n.group <- length(group.id)
 
-# determine signal strength, such as used in Figure 1 of Brzyski et. al. (2015)
+# determine signal strength, such as used in Figure 1 in Brzyski et. al. (2015)
 Bfun <- function(l) {
   sqrt(4*log(n.group) / (1 - n.group^(-2/l)) - l)
 }
