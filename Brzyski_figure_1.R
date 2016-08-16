@@ -107,7 +107,7 @@ for (k in 1:length(n.relevant)) {
 
   cat("done\n")
 }
-save(parallel.results, "Brzyski_1_results.RData") # keep a backup
+save(parallel.results, file = "Brzyski_1_results.RData") # keep a backup
 
 
 #--- Collect and summarize simulation results
