@@ -146,11 +146,9 @@ png(file = "./figures/Brzyski_3ab.png", width = 600, height = 480)
 
 xend <- tail(n.relevant, 1)
 ggplot(FDR.results) +
-  geom_segment(mapping = aes(x = 0, xend = xend, y = 0.1, 
-                             yend = 0.1*(n.group - xend)/n.group), 
+  geom_segment(mapping = aes(x = 0, xend = xend, y = 0.1, yend = 0.1), 
                linetype = 2, color = "black") +
-  geom_segment(mapping = aes(x = 0, xend = xend, y = 0.05, 
-                             yend = 0.05*(n.group - xend)/n.group), 
+  geom_segment(mapping = aes(x = 0, xend = xend, y = 0.05, yend = 0.05), 
                linetype = 2, color = "black") +
   geom_line(mapping = aes(x = n.relevant, y = FDR, color = scenario)) + 
   geom_point(mapping = aes(x = n.relevant, y = FDR, color = scenario)) +
@@ -217,7 +215,6 @@ power.results <- power.results %>% left_join(lwr) %>% left_join(upr)
 # plot estimated power with error bars 
 png(file = "./figures/Brzyski_3_power.png", width = 600, height = 480)
 
-xend <- tail(n.relevant, 1)
 ggplot(power.results) +
   geom_line(mapping = aes(x = n.relevant, y = power, color = scenario)) + 
   geom_point(mapping = aes(x = n.relevant, y = power, color = scenario)) +
@@ -237,6 +234,6 @@ ggplot(power.results) +
                       labels=c("'max', 0.05", "'max', 0.1", 
                                "'corrected', 0.05", 
                                "'corrected', 0.1")) +
-  coord_cartesian(ylim = c(0.3, 1))
+  coord_cartesian(ylim = c(0.5, 1))
 
 dev.off()
