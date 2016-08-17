@@ -121,7 +121,7 @@ for(k in 1:length(n.relevant)) {
 # get means and error bars for FDP and power
 results.summary <- results %>% select(-replication) %>% group_by(n.relevant) %>% 
   summarize_all(funs(mean, lwr = (mean(.) - 2*sd(.)/sqrt(n.replications)),
-                     upr = (mean(.) - 2*sd(.)/sqrt(n.replications))))
+                     upr = (mean(.) + 2*sd(.)/sqrt(n.replications))))
 
 
 #--- Plot a figure analogous to Figure 1a-b in Brzyski et. al. (2015)
@@ -139,19 +139,31 @@ upr <- results.summary %>% select(n.relevant, ends_with("FDP_upr")) %>%
 FDR.results <- FDR.results %>% left_join(lwr) %>% left_join(upr)
 
 # plot estimated FDR with error bars 
-pdf(file="./figures/Brzyski_1ab.pdf")
+png(file = "./figures/Brzyski_1ab.png", width = 600, height = 480)
 
 xend <- tail(n.relevant, 1)
 ggplot(FDR.results) +
-  geom_segment(mapping = aes(x = 0, xend = xend, y = 0.1, yend = 0.1*(n.group - xend)/n.group), 
+  geom_segment(mapping = aes(x = 0, xend = xend, y = 0.1, 
+                             yend = 0.1*(n.group - xend)/n.group), 
                linetype = 2, color = "black") +
-  geom_segment(mapping = aes(x = 0, xend = xend, y = 0.05, yend = 0.05*(n.group - xend)/n.group), 
+  geom_segment(mapping = aes(x = 0, xend = xend, y = 0.05, 
+                             yend = 0.05*(n.group - xend)/n.group), 
                linetype = 2, color = "black") +
   geom_line(mapping = aes(x = n.relevant, y = FDR, color = scenario)) + 
   geom_point(mapping = aes(x = n.relevant, y = FDR, color = scenario)) +
-  geom_ribbon(mapping = aes(x = n.relevant, ymin = lwr, ymax = upr, fill = scenario), alpha=0.25) +
-  xlab("Num. significant groups") + ylab("Estimated gFDR") +
-  guides(fill=guide_legend(title="+/-2SE"), color=guide_legend(title="")) +
+  geom_ribbon(mapping = aes(x = n.relevant, ymin = lwr, ymax = upr, 
+                            fill = scenario), alpha=0.25) +
+  xlab("Number of significant groups") + ylab("Estimated gFDR +/- 2SE") +
+  scale_color_discrete(name = "Parameters:\nlambda,\ntarget gFDR", 
+                       breaks = c("lambda.max.05", "lambda.max.1",
+                                  "lambda.mean.05", "lambda.mean.1"),
+                       labels=c("'max', 0.05", "'max', 0.1", 
+                                "'mean', 0.05", "'mean', 0.1")) +
+  scale_fill_discrete(name = "Parameters:\nlambda,\ntarget gFDR", 
+                      breaks = c("lambda.max.05", "lambda.max.1",
+                                 "lambda.mean.05", "lambda.mean.1"),
+                      labels=c("'max', 0.05", "'max', 0.1", 
+                               "'mean', 0.05", "'mean', 0.1")) +
   coord_cartesian(ylim = c(0, 0.15))
 
 dev.off()
@@ -172,15 +184,25 @@ upr <- results.summary %>% select(n.relevant, ends_with("power_upr")) %>%
 power.results <- power.results %>% left_join(lwr) %>% left_join(upr)
 
 # plot estimated FDR with error bars 
-pdf(file="./figures/Brzyski_1c.pdf")
+png(file = "./figures/Brzyski_1c.png", width = 600, height = 480)
 
 xend <- tail(n.relevant, 1)
 ggplot(power.results) +
   geom_line(mapping = aes(x = n.relevant, y = power, color = scenario)) + 
   geom_point(mapping = aes(x = n.relevant, y = power, color = scenario)) +
-  geom_ribbon(mapping = aes(x = n.relevant, ymin = lwr, ymax = upr, fill = scenario), alpha=0.25) +
-  xlab("Num. significant groups") + ylab("Estimated power") +
-  guides(fill=guide_legend(title="+/-2SE"), color=guide_legend(title="")) +
+  geom_ribbon(mapping = aes(x = n.relevant, ymin = lwr, ymax = upr, 
+                            fill = scenario), alpha=0.25) +
+  xlab("Number of significant groups") + ylab("Estimated power +/- 2SE") +
+  scale_color_discrete(name = "Parameters:\nlambda,\ntarget gFDR", 
+                       breaks = c("lambda.max.05", "lambda.max.1",
+                                  "lambda.mean.05", "lambda.mean.1"),
+                       labels=c("'max', 0.05", "'max', 0.1", 
+                                "'mean', 0.05", "'mean', 0.1")) +
+  scale_fill_discrete(name = "Parameters:\nlambda,\ntarget gFDR", 
+                      breaks = c("lambda.max.05", "lambda.max.1",
+                                 "lambda.mean.05", "lambda.mean.1"),
+                      labels=c("'max', 0.05", "'max', 0.1", 
+                               "'mean', 0.05", "'mean', 0.1")) +
   coord_cartesian(ylim = c(0.3, 1))
 
 dev.off()
