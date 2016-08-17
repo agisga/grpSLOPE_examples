@@ -137,7 +137,7 @@ upr <- results.summary %>% select(n.relevant, ends_with("FDP_upr")) %>%
 FDR.results <- FDR.results %>% left_join(lwr) %>% left_join(upr)
 
 # plot estimated FDR with error bars 
-png(file = "./figures/Brzyski_4a.png", width = 600, height = 480)
+pdf(file = "./figures/Brzyski_4a.pdf")
 
 xend <- tail(n.relevant, 1)
 ggplot(FDR.results) +
@@ -176,7 +176,7 @@ upr <- results.summary %>% select(n.relevant, ends_with("power_upr")) %>%
 power.results <- power.results %>% left_join(lwr) %>% left_join(upr)
 
 # plot estimated power with error bars 
-png(file = "./figures/Brzyski_4b.png", width = 600, height = 480)
+pdf(file = "./figures/Brzyski_4b.pdf")
 
 ggplot(power.results) +
   geom_line(mapping = aes(x = n.relevant, y = power, color = scenario)) + 
@@ -197,7 +197,7 @@ dev.off()
 #--- Plot a figure analogous to Figure 1c in Brzyski et. al. (2015)
 
 # plot histogram of group sizes 
-png(file = "./figures/Brzyski_4c.png", width = 600, height = 480)
+pdf(file = "./figures/Brzyski_4c.pdf")
 
 data.frame(len = group.length) %>%
   ggplot(aes(len)) + geom_histogram(binwidth = 1, color = "grey", fill = "purple") +
