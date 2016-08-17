@@ -107,7 +107,7 @@ for (k in 1:length(n.relevant)) {
 
   cat("done\n")
 }
-save(parallel.results, file = "Brzyski_1_results.RData") # keep a backup
+save(parallel.results, file = "./RData/Brzyski_1_results.RData") # keep a backup
 
 
 #--- Collect and summarize simulation results
@@ -183,7 +183,7 @@ upr <- results.summary %>% select(n.relevant, ends_with("power_upr")) %>%
   mutate(scenario = gsub("\\.power_upr", "", scenario))
 power.results <- power.results %>% left_join(lwr) %>% left_join(upr)
 
-# plot estimated FDR with error bars 
+# plot estimated power with error bars 
 pdf(file = "./figures/Brzyski_1c.pdf")
 
 xend <- tail(n.relevant, 1)
