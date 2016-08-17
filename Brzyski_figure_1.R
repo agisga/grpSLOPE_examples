@@ -11,7 +11,7 @@ library(ggplot2)
 
 # Adjust the number of cores to the particular system
 library(doParallel)
-registerDoParallel(cores=4)
+registerDoParallel(cores=as.integer(Sys.getenv("SLURM_NTASKS_PER_NODE")))
 
 
 #--- Set up global parameters for the simulation
@@ -39,7 +39,7 @@ group.id <- getGroupID(group)
 group.length <- sapply(group.id, FUN=length)
 n.group <- length(group.id)
 
-# determine signal strength, such as used in Figure 1 of Brzyski et. al. (2015)
+# determine signal strength, such as used in Figure 1 in Brzyski et. al. (2015)
 Bfun <- function(l) {
   sqrt(4*log(n.group) / (1 - n.group^(-2/l)) - l)
 }
@@ -107,7 +107,7 @@ for (k in 1:length(n.relevant)) {
 
   cat("done\n")
 }
-save(parallel.results, "Brzyski_1_results.RData") # keep a backup
+save(parallel.results, file = "Brzyski_1_results.RData") # keep a backup
 
 
 #--- Collect and summarize simulation results
@@ -139,7 +139,7 @@ upr <- results.summary %>% select(n.relevant, ends_with("FDP_upr")) %>%
 FDR.results <- FDR.results %>% left_join(lwr) %>% left_join(upr)
 
 # plot estimated FDR with error bars 
-png(file="./figures/Brzyski_1ab.png")
+pdf(file="./figures/Brzyski_1ab.pdf")
 
 xend <- tail(n.relevant, 1)
 ggplot(FDR.results) +
@@ -172,7 +172,7 @@ upr <- results.summary %>% select(n.relevant, ends_with("power_upr")) %>%
 power.results <- power.results %>% left_join(lwr) %>% left_join(upr)
 
 # plot estimated FDR with error bars 
-png(file="./figures/Brzyski_1c.png")
+pdf(file="./figures/Brzyski_1c.pdf")
 
 xend <- tail(n.relevant, 1)
 ggplot(power.results) +
