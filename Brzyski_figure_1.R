@@ -186,7 +186,6 @@ power.results <- power.results %>% left_join(lwr) %>% left_join(upr)
 # plot estimated power with error bars 
 png(file = "./figures/Brzyski_1c.png", width = 600, height = 480)
 
-xend <- tail(n.relevant, 1)
 ggplot(power.results) +
   geom_line(mapping = aes(x = n.relevant, y = power, color = scenario)) + 
   geom_point(mapping = aes(x = n.relevant, y = power, color = scenario)) +
