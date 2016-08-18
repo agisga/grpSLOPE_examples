@@ -73,7 +73,7 @@ for (k in 1:length(n.relevant)) {
     n.signif <- n.relevant[k]
     ind.relevant <- sample(1:n.group, n.signif)
     for (j in ind.relevant) {
-      signals <- runif(group.length[j])
+      signals <- runif(group.length[j]) + 0.1
       X1 <- as.matrix(X[ , group.id[[j]]]) %*% signals
       b[group.id[[j]]] <- (signal.strength / norm(as.matrix(X1), "f")) * signals
     }
