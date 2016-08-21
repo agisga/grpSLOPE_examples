@@ -16,6 +16,8 @@ registerDoParallel(cores=as.integer(Sys.getenv("SLURM_NTASKS_PER_NODE")))
 
 #--- Set up global parameters for the simulation
 
+set.seed(20160820)
+
 # auxilliary function to get (group-wise) FDP and power from one grpSLOPE solution object
 get_FDP_and_power <- function(result, true.relevant){
   truepos <- length(intersect(result$selected, true.relevant))
@@ -28,6 +30,7 @@ get_FDP_and_power <- function(result, true.relevant){
 # set the grouping structure
 n.group <- 1000
 group.length <- rbinom(n.group, 1000, 0.008)
+group.length[group.length == 0] <- 1 # avoid having groups of size 0
 group <- c()
 for (i in 1:n.group) {
   group <- c(group, rep(i, group.length[i]))
@@ -55,7 +58,6 @@ n.replications <- 200
 
 # run the simulations n.replications times at each level of n.relevant,
 # and with each combination of lambda="max", lambda="mean", fdr=0.1, fdr=0.05
-set.seed(20160807)
 parallel.results <- vector(mode="list")
 for (k in 1:length(n.relevant)) {
   cat(paste("sparsity level", k, "started"))
