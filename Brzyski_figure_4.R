@@ -11,7 +11,7 @@ library(ggplot2)
 
 # Adjust the number of cores to the particular system
 library(doParallel)
-registerDoParallel(cores=as.integer(Sys.getenv("SLURM_NTASKS_PER_NODE")))
+registerDoParallel(cores=5)
 
 
 #--- Set up global parameters for the simulation
@@ -75,7 +75,7 @@ for (k in 1:length(n.relevant)) {
     n.signif <- n.relevant[k]
     ind.relevant <- sample(1:n.group, n.signif)
     for (j in ind.relevant) {
-      signals <- runif(group.length[j])
+      signals <- runif(group.length[j]) + 0.1
       X1 <- as.matrix(X[ , group.id[[j]]]) %*% signals
       b[group.id[[j]]] <- (signal.strength / norm(as.matrix(X1), "f")) * signals
     }
@@ -84,12 +84,8 @@ for (k in 1:length(n.relevant)) {
     y <- X %*% b + rnorm(n)
 
     # get Group SLOPE solutions with different lambda and fdr values
-    lambda.1 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.1,
-                         lambda = "corrected", verbose = FALSE,
-                         orthogonalize = FALSE, normalize = FALSE)
-    lambda.05 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.05,
-                          lambda = "corrected", verbose = FALSE,
-                          orthogonalize = FALSE, normalize = FALSE)
+    lambda.1 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.1)
+    lambda.05 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.05)
 
     # get the FDPs and powers of the grpSLOPE solutions
     true.relevant <- names(group.id)[ind.relevant]
