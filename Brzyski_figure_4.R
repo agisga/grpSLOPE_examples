@@ -84,6 +84,7 @@ for (k in 1:length(n.relevant)) {
     y <- X %*% b + rnorm(n)
 
     # get Group SLOPE solutions with different lambda and fdr values
+    # (this has the same gFDR controlling properties with orthogonalize=FALSE too)
     lambda.1 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.1)
     lambda.05 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.05)
 
