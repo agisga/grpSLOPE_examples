@@ -1,0 +1,11 @@
+#!/bin/bash
+#SBATCH --qos=long              # Quality of Service
+#SBATCH --job-name=grpSLOPE     # Job Name
+#SBATCH --time=3-00:00:00       # WallTime
+#SBATCH --nodes=1               # Number of Nodes
+#SBATCH --ntasks-per-node=20    # Number of Tasks per Node
+#SBATCH --mem=256000
+
+module load R/3.2.5-intel
+
+Rscript group_size_influence_test.R
