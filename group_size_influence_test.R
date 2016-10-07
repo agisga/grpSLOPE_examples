@@ -45,10 +45,10 @@ for (len in considered.group.lengths) {
 
   # considered numbers of truly relevant groups
   sparsity <- seq(0, 0.9, length = 10)
-  n.relevant <- floor(sparsity * n.group)
+  n.relevant <- unique(floor(sparsity * n.group))
 
   # how many times the simulation is repeated
-  n.replications <- 200 
+  n.replications <- 80 
 
 
   #--- Simulation main loop
@@ -82,8 +82,8 @@ for (len in considered.group.lengths) {
 
       # get Group SLOPE solutions with different lambda and fdr values
       # (this has the same gFDR controlling properties with orthogonalize=FALSE too)
-      lambda.1 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.1)
-      lambda.05 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.05)
+      lambda.1 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.1, sigma = 1)
+      lambda.05 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.05, sigma = 1)
 
       # get the FDPs and powers of the grpSLOPE solutions
       true.relevant <- names(group.id)[ind.relevant]
@@ -131,10 +131,10 @@ for (len in considered.group.lengths) {
     mutate(scenario = gsub("\\.FDP_upr", "", scenario))
   FDR.results <- FDR.results %>% left_join(lwr) %>% left_join(upr)
 
-  filename <- paste0("./figures/gFDR", len, ".png")
 
   # plot estimated FDR with error bars 
-  png(file = filename, width = 600, height = 480)
+  filename <- paste0("./figures/gFDR", len, ".pdf")
+  pdf(file = filename)
 
   xend <- tail(n.relevant, 1)
   ggplot(FDR.results) +
@@ -153,7 +153,8 @@ for (len in considered.group.lengths) {
     scale_fill_discrete(name = "target gFDR", 
                         breaks = c("lambda.1", "lambda.05"),
                         labels=c("0.1", "0.05")) +
-    coord_cartesian(ylim = c(0, 0.2))
+    coord_cartesian(ylim = c(0, 0.2)) + 
+    ggtitle(paste("n =", n, ", p=", p, "group size l =", len))
 
   dev.off()
 }
