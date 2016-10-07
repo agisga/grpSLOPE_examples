@@ -31,8 +31,8 @@ get_FDP_and_power <- function(result, true.relevant){
 }
 
 # set the grouping structure
-len <- 200
-n.group <- 10 
+len <- 20 
+n.group <- 100 
 group <- rep(1:n.group, each = len)
 group.length <- rep(len, n.group)
 group.id <- getGroupID(group)
@@ -41,7 +41,7 @@ group.id <- getGroupID(group)
 signal.strength <- sqrt(4*log(n.group) / (1 - n.group^(-2/len)) - len)
 
 # considered numbers of truly relevant groups
-sparsity <- seq(0, 0.9, length = 10)
+sparsity <- seq(0, 0.4, length = 5)
 n.relevant <- unique(floor(sparsity * n.group))
 
 # how many times the simulation is repeated
@@ -79,8 +79,8 @@ for (k in 1:length(n.relevant)) {
 
     # get Group SLOPE solutions with different lambda and fdr values
     # (this has the same gFDR controlling properties with orthogonalize=FALSE too)
-    lambda.1 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.1, sigma = 1)
-    lambda.05 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.05, sigma = 1)
+    lambda.1 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.1)
+    lambda.05 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.05)
 
     # get the FDPs and powers of the grpSLOPE solutions
     true.relevant <- names(group.id)[ind.relevant]

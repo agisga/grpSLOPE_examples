@@ -24,7 +24,7 @@ for (len in considered.group.lengths) {
 
   #--- Set up global parameters for the simulation
 
-  set.seed(20161006)
+  set.seed(20161007)
 
   # auxilliary function to get (group-wise) FDP and power from one grpSLOPE solution object
   get_FDP_and_power <- function(result, true.relevant){
