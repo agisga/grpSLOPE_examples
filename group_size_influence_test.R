@@ -17,7 +17,8 @@ registerDoParallel(cores=as.integer(Sys.getenv("SLURM_NTASKS_PER_NODE")))
 n <- 1000
 p <- 2000
 
-considered.group.lengths <- c(10, 20, 50, 100, 150, 200, 250, 400)
+considered.group.lengths <- c(5, 10, 20, 50, 100, 200, 400)
+plot.list <- list()
 
 for (len in considered.group.lengths) {
 
@@ -44,11 +45,11 @@ for (len in considered.group.lengths) {
   signal.strength <- sqrt(4*log(n.group) / (1 - n.group^(-2/len)) - len)
 
   # considered numbers of truly relevant groups
-  sparsity <- seq(0, 0.9, length = 10)
+  sparsity <- seq(0, 0.4, length = 5)
   n.relevant <- unique(floor(sparsity * n.group))
 
   # how many times the simulation is repeated
-  n.replications <- 80 
+  n.replications <- 100 
 
 
   #--- Simulation main loop
@@ -82,8 +83,8 @@ for (len in considered.group.lengths) {
 
       # get Group SLOPE solutions with different lambda and fdr values
       # (this has the same gFDR controlling properties with orthogonalize=FALSE too)
-      lambda.1 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.1, sigma = 1)
-      lambda.05 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.05, sigma = 1)
+      lambda.1 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.1)
+      lambda.05 <- grpSLOPE(X = X, y = y, group = group, fdr = 0.05)
 
       # get the FDPs and powers of the grpSLOPE solutions
       true.relevant <- names(group.id)[ind.relevant]
@@ -133,11 +134,8 @@ for (len in considered.group.lengths) {
 
 
   # plot estimated FDR with error bars 
-  filename <- paste0("./figures/gFDR", len, ".pdf")
-  pdf(file = filename)
-
   xend <- tail(n.relevant, 1)
-  ggplot(FDR.results) +
+  plot.list[[as.character(len)]] <- ggplot(FDR.results) +
     geom_segment(mapping = aes(x = 0, xend = xend, y = 0.1, yend = 0.1), 
                  linetype = 2, color = "black") +
     geom_segment(mapping = aes(x = 0, xend = xend, y = 0.05, yend = 0.05), 
@@ -153,8 +151,10 @@ for (len in considered.group.lengths) {
     scale_fill_discrete(name = "target gFDR", 
                         breaks = c("lambda.1", "lambda.05"),
                         labels=c("0.1", "0.05")) +
-    coord_cartesian(ylim = c(0, 0.2)) + 
-    ggtitle(paste("n =", n, ", p=", p, "group size l =", len))
+    coord_cartesian(ylim = c(0, 0.5)) + 
+    ggtitle(paste("n =", n, ", p=", p, ",", n.group, ",", n.group, "groups of size l =", len))
 
-  dev.off()
+  save(list = ls(), file = paste0(len, ".RData"))
 }
+
+save(plot.list, file = "plot_list.RData")
