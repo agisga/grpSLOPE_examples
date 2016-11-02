@@ -11,7 +11,7 @@ library(ggplot2)
 
 # Adjust the number of cores to the particular system
 library(doParallel)
-registerDoParallel(cores=as.integer(Sys.getenv("SLURM_NTASKS_PER_NODE")))
+registerDoParallel(cores=4)
 
 
 #--- Set up global parameters for the simulation
