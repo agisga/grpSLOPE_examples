@@ -1,5 +1,5 @@
 #---------------------------------------------------------------------------
-# This code reproduces the simulation studies of Figures 2b-e and 3a in
+# This code reproduces the simulation studies of Figures 3a-c in
 # D. Brzyski, A.Gossmann, W. Su, M. Bogdan (2016), "Group SLOPE -
 # - adaptive selection of groups of predictors"
 # Preprint available at https://arxiv.org/abs/1610.04960

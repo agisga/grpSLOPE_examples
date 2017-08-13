@@ -1,5 +1,5 @@
 #---------------------------------------------------------------------------
-# This code reproduces the simulation studies of Figures 2b-e and 3a in
+# This code reproduces the simulation studies of Figures 2b-e in
 # D. Brzyski, A.Gossmann, W. Su, M. Bogdan (2016), "Group SLOPE -
 # - adaptive selection of groups of predictors"
 # Preprint available at https://arxiv.org/abs/1610.04960
@@ -103,16 +103,6 @@ for (k in 1:length(n.relevant)) {
     FDPs.and.powers[c("lambda.mean.1.FDP", "lambda.mean.1.power")] <- get_FDP_and_power(lambda.mean.1, true.relevant)
     FDPs.and.powers[c("lambda.mean.05.FDP", "lambda.mean.05.power")] <- get_FDP_and_power(lambda.mean.05, true.relevant)
 
-    # Store the sizes of the selected groups in lambda.mean.05 for Figure 3a
-    selected.group.length <- factor(group.length[lambda.mean.05$selected],
-                                    levels = unique(group.length))
-    selected.group.length.count <- c(table(selected.group.length))
-    names(selected.group.length.count) <- paste0("grp_size_",
-                                                 names(selected.group.length.count))
-    selected.group.length.fraction <-
-      selected.group.length.count / max(1, sum(selected.group.length.count))
-    FDPs.and.powers <- c(FDPs.and.powers, selected.group.length.fraction)
-
     # return the results
     FDPs.and.powers
   }
@@ -127,4 +117,4 @@ for(k in 1:length(n.relevant)) {
 }
 
 # save the results
-save(results, file = "../RData/figure_2bcde_3a_simulation_results.RData")
+save(results, file = "../RData/figure_2bcde_simulation_results.RData")
