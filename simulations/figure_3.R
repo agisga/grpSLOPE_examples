@@ -37,7 +37,7 @@ Bfun <- function(l) {
 signal.strength <- sum(Bfun(group.length)) / sum(sqrt(group.length))
 
 # considered numbers of truly relevant groups
-n.relevant <- floor(seq(1, 250, length=11))
+n.relevant <- c(3, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250)
 
 # how many times the simulation is repeated
 n.replications <- 300
@@ -83,6 +83,9 @@ for (k in 1:length(n.relevant)) {
     len_wt <- sqrt_wt^2
     one_wt <- rep(1, p)
 
+    # center y before Group SLOPE optimization
+    y <- y - mean(y)
+
     # get Group SLOPE solutions with different choices of weights
     sqrt_wt_fit <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
                                                     wt=sqrt_wt, lambda=lambda.mean,
@@ -118,11 +121,8 @@ for (k in 1:length(n.relevant)) {
       }
     }
 
-    selected.group.length.fraction <-
-      selected.group.length / max(1, sum(selected.group.length))
-
     # return the results
-    selected.group.length.fraction
+    c(selected.group.length, "n.relevant" = n.signif)
   }
 
   cat("done\n")
@@ -135,4 +135,5 @@ for(k in 1:length(n.relevant)) {
 }
 
 # save the results
-save(results, file = "../RData/figure_3_simulation_results.RData")
+save(results, p, fdr, n.replications, group.id,
+     file = "../RData/figure_3_simulation_results.RData")
