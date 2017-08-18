@@ -73,10 +73,16 @@ for (k in 1:length(n.relevant)) {
     # manually. So we will generate the lambda sequence, the weight vectors, and
     # apply the proximal gradient solver for Group SLOPE by hand as three separate steps.
 
-    # generate lambda
-    lambda.mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
-                                    wt=sqrt(group.length),
-                                    method="mean")
+    # generate lambdas for different group-wise weights
+    sqrt_wt_lambda_mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
+                                            wt=sqrt(group.length),
+                                            method="mean")
+    len_wt_lambda_mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
+                                           wt=group.length,
+                                           method="mean")
+    one_wt_lambda_mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
+                                           wt=rep(1, n.group),
+                                           method="mean")
 
     # considered vectors of weight per coefficient
     sqrt_wt <- rep(NA, p)
@@ -91,14 +97,14 @@ for (k in 1:length(n.relevant)) {
 
     # get Group SLOPE solutions with different choices of weights
     sqrt_wt_fit <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                    wt=sqrt_wt, lambda=lambda.mean,
-                                                    verbose=FALSE)
+                                                    wt=sqrt_wt, verbose=FALSE,
+                                                    lambda=sqrt_wt_lambda_mean)
     len_wt_fit <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                   wt=len_wt, lambda=lambda.mean,
-                                                   verbose=FALSE)
+                                                   wt=len_wt, verbose=FALSE,
+                                                   lambda=len_wt_lambda_mean)
     one_wt_fit <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
-                                                   wt=one_wt, lambda=lambda.mean,
-                                                   verbose=FALSE)
+                                                   wt=one_wt, verbose=FALSE,
+                                                   lambda=one_wt_lambda_mean)
 
     # store the sizes of the selected groups
 
