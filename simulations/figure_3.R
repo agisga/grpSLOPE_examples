@@ -80,8 +80,10 @@ for (k in 1:length(n.relevant)) {
     len_wt_lambda_mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
                                            wt=group.length,
                                            method="mean")
+    ones <- rep(1, n.group)
+    names(ones) <- names(group.length)
     one_wt_lambda_mean <- lambdaGroupSLOPE(fdr=fdr, group=group,
-                                           wt=rep(1, n.group),
+                                           wt=ones,
                                            method="mean")
 
     # considered vectors of weight per coefficient
