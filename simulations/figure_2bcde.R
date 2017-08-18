@@ -117,5 +117,5 @@ for(k in 1:length(n.relevant)) {
 }
 
 # save the results
-save(results, p, fdr, n.replications, group.id,
+save(results, p, n.replications, group.id,
      file = "../RData/figure_2bcde_simulation_results.RData")
