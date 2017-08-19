@@ -63,7 +63,7 @@ for (k in 1:length(n.relevant)) {
     ind.relevant <- sample(1:n.group, n.signif)
     for (j in ind.relevant) {
       rand_vec <- runif(group.length[j]) + 0.1
-      b[group.id[[j]]] <- (signal.strength * sqrt(group.length[j]) / sum(sqrt(rand_vec))) * rand_vec
+      b[group.id[[j]]] <- (signal.strength * sqrt(group.length[j]) / sqrt(sum(rand_vec^2))) * rand_vec
     }
 
     # generate the response vector
