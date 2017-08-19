@@ -94,9 +94,6 @@ for (k in 1:length(n.relevant)) {
     len_wt <- sqrt_wt^2
     one_wt <- rep(1, p)
 
-    # center y before Group SLOPE optimization
-    y <- y - mean(y)
-
     # get Group SLOPE solutions with different choices of weights
     sqrt_wt_fit <- proximalGradientSolverGroupSLOPE(y=y, A=X, group=group,
                                                     wt=sqrt_wt, verbose=FALSE,
