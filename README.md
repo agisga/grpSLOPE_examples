@@ -1,6 +1,7 @@
 # grpSLOPE_examples
 
-Usage examples of varying quality and readability for the R package grpSLOPE.
+Usage examples for the R package [grpSLOPE](https://CRAN.R-project.org/package=grpSLOPE).
 
-A better example of basic usage can be found [here](http://www.alexejgossmann.com/grpSLOPE/basic-usage/).
+The code in this repository may be outdated &mdash; *for updated versions of these scripts see* <https://github.com/dbrzyski/gSLOPE>.
 
+A much simpler example of basic usage can be found [here](http://www.alexejgossmann.com/grpSLOPE/basic-usage/).
