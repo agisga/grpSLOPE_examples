@@ -1,6 +1,8 @@
-library(grpSLOPE)
 library(microbenchmark)
 library(grpreg)
+# install the version of grpSLOPE that has an ADMM optimizer
+devtools::install_github("agisga/grpSLOPE", ref = "optimization_and_ADMM")
+library(grpSLOPE)
 
 #--- function definitions
 
