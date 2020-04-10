@@ -5,16 +5,6 @@ output:
   html_notebook: default
 ---
 
-For now ADMM for `grpSLOPE` is implemented in an alternate (experimental) branch in the github repository.
-
-To install the `grpSLOPE` version from that branch on github do:
-
-```{r message=FALSE, warning=FALSE, paged.print=FALSE}
-devtools::install_github("agisga/grpSLOPE", ref = "optimization_and_ADMM")
-```
-
-Then load the package:
-
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 library(grpSLOPE)
 library(tictoc) # for measuring runtime of ADMM vs FISTA
@@ -91,7 +81,7 @@ As expected, they are the same up to about 1e-6.
 Compare the obtained results to the true solution:
 
 ```{r}
-print(paste("TP:", sum(x != 0 & result_admm$x != 0), ";", 
+print(paste("TP:", sum(x != 0 & result_admm$x != 0), ";",
             "FP:", sum(x == 0 & result_admm$x != 0)))
 ```
 
